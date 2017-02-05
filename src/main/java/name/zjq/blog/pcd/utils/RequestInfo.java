@@ -2,8 +2,6 @@ package name.zjq.blog.pcd.utils;
 
 import javax.servlet.http.HttpServletRequest;
 
-import eu.bitwalker.useragentutils.Browser;
-import eu.bitwalker.useragentutils.OperatingSystem;
 import eu.bitwalker.useragentutils.UserAgent;
 
 public class RequestInfo {

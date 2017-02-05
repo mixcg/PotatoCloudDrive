@@ -1,11 +1,11 @@
 package name.zjq.blog.pcd.utils;
 
-public class RInfo {
+public class PR {
 	private int status;
 	private String resultdesc;
 	private Object result;
 
-	public RInfo(int status, String resultdesc, Object result) {
+	public PR(int status, String resultdesc, Object result) {
 		this.status = status;
 		this.resultdesc = resultdesc;
 		this.result = result;

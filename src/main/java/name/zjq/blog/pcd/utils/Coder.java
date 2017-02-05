@@ -1,13 +1,10 @@
 package name.zjq.blog.pcd.utils;
 
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
-
+import java.util.Base64;
 /**
  * 编码util
  *
  */
-@SuppressWarnings("restriction")
 public class Coder {
 
 	/**
@@ -17,8 +14,8 @@ public class Coder {
 	 * @return
 	 * @throws Exception
 	 */
-	public static final byte[] decryptBASE64(String key) throws Exception {
-		return (new BASE64Decoder()).decodeBuffer(key);
+	public static final byte[] decoderBASE64(String key) {
+		return Base64.getDecoder().decode(key);
 	}
 
 	/**
@@ -28,10 +25,28 @@ public class Coder {
 	 * @return
 	 * @throws Exception
 	 */
-	public static final String encryptBASE64(byte[] key) throws Exception {
-		return (new BASE64Encoder()).encodeBuffer(key);
+	public static final String encoderBASE64(byte[] key) {
+		return Base64.getEncoder().encodeToString(key);
 	}
 
+	/**
+	 * base64解码（url）
+	 * @param key
+	 * @return
+	 */
+	public static final byte[] decoderURLBASE64(String key){
+		return Base64.getUrlDecoder().decode(key);
+	}
+	
+	/**
+	 * base64编码（url）
+	 * @param key
+	 * @return
+	 */
+	public static final String encoderURLBASE64(byte[] key){
+		return Base64.getUrlEncoder().encodeToString(key);
+	}
+	
 	/**
 	 * byte数组转换成十六进制字符串
 	 * 

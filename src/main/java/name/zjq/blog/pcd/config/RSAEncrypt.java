@@ -32,7 +32,6 @@ public class RSAEncrypt {
 
 	private RSAEncrypt() {
 		keyFilePath = Thread.currentThread().getContextClassLoader().getResource("").getPath() + "rsakeypair";
-		System.out.println(keyFilePath);
 		if (!getKeyFromFile()) {
 			initKeyPair();
 			writeKeyFile();
@@ -46,7 +45,7 @@ public class RSAEncrypt {
 	 */
 	public String getPubKey() {
 		try {
-			return Coder.encryptBASE64(pubKey);
+			return Coder.encoderBASE64(pubKey);
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -73,8 +72,8 @@ public class RSAEncrypt {
 				reader.close();
 				String s = sb.toString().replace(" ", "");
 				if (!"".equals(s) && s.indexOf(",") > -1) {
-					pubKey = Coder.decryptBASE64(s.split(",")[0]);
-					priKey = Coder.decryptBASE64(s.split(",")[1]);
+					pubKey = Coder.decoderBASE64(s.split(",")[0]);
+					priKey = Coder.decoderBASE64(s.split(",")[1]);
 					return checkKey();
 				}
 			} catch (Exception e) {
@@ -119,7 +118,7 @@ public class RSAEncrypt {
 				file.createNewFile();
 			}
 			FileWriter fw = new FileWriter(file);
-			fw.write(Coder.encryptBASE64(this.pubKey) + "," + Coder.encryptBASE64(this.priKey));
+			fw.write(Coder.encoderBASE64(this.pubKey) + "," + Coder.encoderBASE64(this.priKey));
 			fw.flush();
 			fw.close();
 		} catch (Exception e) {
@@ -163,7 +162,7 @@ public class RSAEncrypt {
 			}
 			byte[] decryptedData = out.toByteArray();
 			out.close();
-			return Coder.encryptBASE64(decryptedData);
+			return Coder.encoderBASE64(decryptedData);
 		} catch (Exception e) {
 			logger.error("公钥加密异常!", e);
 		}
@@ -188,7 +187,7 @@ public class RSAEncrypt {
 			Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
 			cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-			byte[] encryptedData = Coder.decryptBASE64(data);
+			byte[] encryptedData = Coder.decoderBASE64(data);
 
 			int inputLen = encryptedData.length;
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -221,14 +220,15 @@ public class RSAEncrypt {
 	 * @return
 	 */
 	private boolean checkKey() {
-		return "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-				.equals(decryptByPriKey(encryptByPubKey(
-						"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111")));
+		return "123456".equals(decryptByPriKey(encryptByPubKey("123456")));
 	}
 
-	private static final RSAEncrypt encrypt = new RSAEncrypt();
+	private static RSAEncrypt encrypt = null;
 
 	public static RSAEncrypt getInstance() {
+		if (encrypt == null) {
+			encrypt = new RSAEncrypt();
+		}
 		return encrypt;
 	}
 }

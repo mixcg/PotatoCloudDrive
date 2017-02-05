@@ -1,5 +1,6 @@
 package name.zjq.blog.pcd.interceptor;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,11 +15,13 @@ public class TokenAuthInterceptor implements HandlerInterceptor {
 	public static final String TOKEN_NAME = "token";
 	public static final String ATTRIBUTE_NAME = "AuthUser";
 
-	public void afterCompletion(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2, Exception arg3) throws Exception {
+	public void afterCompletion(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2, Exception arg3)
+			throws Exception {
 
 	}
 
-	public void postHandle(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2, ModelAndView arg3) throws Exception {
+	public void postHandle(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2, ModelAndView arg3)
+			throws Exception {
 
 	}
 
@@ -28,8 +31,17 @@ public class TokenAuthInterceptor implements HandlerInterceptor {
 	public boolean preHandle(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2) throws Exception {
 		String token = arg0.getParameter(TOKEN_NAME);
 		if (StrUtil.isNullOrEmpty(token)) {
-			arg1.setStatus(401);
-			return false;
+			Cookie[] cookies = arg0.getCookies();
+			for (Cookie c : cookies) {
+				if (c.getName().equals("pcdtoken")) {
+					token = c.getValue();
+					break;
+				}
+			}
+			if (StrUtil.isNullOrEmpty(token)) {
+				arg1.setStatus(401);
+				return false;
+			}
 		}
 		User u = UserConfig.checkToken(token, arg0);
 		if (u == null) {

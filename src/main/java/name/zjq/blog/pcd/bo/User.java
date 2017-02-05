@@ -44,4 +44,8 @@ public class User {
 	public String getDirectory() {
 		return this.directory;
 	}
+
+	public String getUsername() {
+		return this.username;
+	}
 }

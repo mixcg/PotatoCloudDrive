@@ -4,8 +4,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,7 +16,6 @@ import name.zjq.blog.pcd.utils.StrUtil;
 
 public class UserConfig {
 
-	private static Lock lock = new ReentrantLock();
 	private static final Log logger = LogFactory.getLog(StartupListener.class);
 	private static final Properties prop = new Properties();
 	private static boolean initFlag = false;
@@ -46,6 +43,7 @@ public class UserConfig {
 					logger.error("配置文件配置有误，请检查");
 					System.exit(1);
 				}
+				directory = directory.replace("\\", "/");
 				userlist.put(username, new User(username, password, directory));
 			}
 			initFlag = true;
@@ -85,14 +83,12 @@ public class UserConfig {
 	 * @param token
 	 */
 	public static void setToken(String username, String token) {
-		lock.lock();
 		long expired = new Date().getTime() + 30 * 60 * 1000;
 		if (userlist.containsKey(username)) {
 			User u = userlist.get(username);
 			u.setToken(token);
 			u.setExpirationtime(expired);
 		}
-		lock.unlock();
 	}
 
 	/**
@@ -114,9 +110,14 @@ public class UserConfig {
 		String username = tokenArray[0];
 		User u = userlist.get(username);
 		String utoken = u.getToken();
-		if (utoken.equals(tokenArg)) {
+		if (utoken== null ) return null;
+		if (utoken.equals(tokenArg) || utoken.replace("=", "").equals(tokenArg.replace("=", "")) ) {
+			if(Long.valueOf(u.getExpirationtime()) <= new Date().getTime()){
+				return null;
+			}
 			RequestInfo ri = new RequestInfo(request);
 			if (ri.getIp().equals(tokenArray[1]) && ri.getBrowserName().equals(tokenArray[2]) && ri.getOsName().equals(tokenArray[3])) {
+				setToken(username,utoken);
 				return u;
 			}
 		}

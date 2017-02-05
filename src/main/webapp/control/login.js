@@ -54,9 +54,11 @@ function LoginControl() {
 			},
 			success : function(data) {
 				if (data) {
-					if (data.status < 0) {
+					if (data.status != 200) {
 						toastr.error(data.resultdesc);
 					} else {
+						CookieUtil.delCookie("pcdtoken");
+						CookieUtil.setCookie("pcdtoken", data.result);
 						window.location.href = "main.html";
 					}
 				}
@@ -71,3 +73,4 @@ function LoginControl() {
 $("#loginButton").click(function() {
 	new LoginControl().login();
 });
+

@@ -28,7 +28,15 @@
 	<!-- 配置拦截器 -->
 	<mvc:interceptors>
 		<mvc:interceptor>
-			<mvc:mapping path="/file/*" />
+			<mvc:mapping path="/file/**" />
+			<bean class="name.zjq.blog.pcd.interceptor.TokenAuthInterceptor" />
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/login/logout" />
+			<bean class="name.zjq.blog.pcd.interceptor.TokenAuthInterceptor" />
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/play/**" />
 			<bean class="name.zjq.blog.pcd.interceptor.TokenAuthInterceptor" />
 		</mvc:interceptor>
 	</mvc:interceptors>
