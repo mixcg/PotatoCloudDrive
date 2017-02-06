@@ -1,17 +1,54 @@
 package name.zjq.blog.pcd.bo;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import name.zjq.blog.pcd.utils.Coder;
+import name.zjq.blog.pcd.utils.RequestAgent;
+import name.zjq.blog.pcd.utils.StrUtil;
+
 public class User {
-	private String username;// 用户名
-	private String password;// 密码
-	private String directory;// 目录
+	private static final Log logger = LogFactory.getLog(User.class);
+	private static final Properties prop = new Properties();
+	private static boolean initFlag = false;
+	private static Map<String, User> userlist = new HashMap<String, User>();
 
-	private String token;
-	private long expirationtime;// 过期时间
-
-	public User(String username, String password, String directory) {
-		this.username = username;
-		this.password = password;
-		this.directory = directory;
+	/**
+	 * 初始化配置文件
+	 */
+	public static void init() {
+		if (!initFlag) {
+			try {
+				prop.load(User.class.getResourceAsStream("/config.properties"));
+			} catch (Exception e) {
+				logger.error("配置文件加载异常！", e);
+				System.exit(1);
+			}
+			String usersplit = prop.getProperty("USERLIST");
+			if (StrUtil.isNullOrEmpty(usersplit)) {
+				logger.error("配置文件配置有误，请检查");
+				System.exit(1);
+			}
+			String[] usernames = usersplit.split(",");
+			for (String username : usernames) {
+				String password = prop.getProperty(String.format("%s_password", username));
+				String directory = prop.getProperty(String.format("%s_directory", username));
+				if (password == null || directory == null) {
+					logger.error("配置文件配置有误，请检查");
+					System.exit(1);
+				}
+				directory = directory.replace("\\", "/");
+				userlist.put(username, new User(username, password, directory));
+			}
+			initFlag = true;
+		}
 	}
 
 	/**
@@ -21,20 +58,74 @@ public class User {
 	 * @param password
 	 * @return
 	 */
-	public boolean loginAuth(String username, String password) {
-		return this.username.equals(username) && this.password.equals(password);
+	public static User loginAuth(String username, String password) {
+		if (userlist.containsKey(username)) {
+			User u = userlist.get(username);
+			if (u.username.equals(username) && u.password.equals(password)) {
+				return u;
+			}
+		}
+		return null;
 	}
 
-	public long getExpirationtime() {
-		return expirationtime;
+	/**
+	 * 创建token
+	 * 
+	 * @return
+	 */
+	public synchronized String createToken(HttpServletRequest request) {
+		if (StrUtil.isNullOrEmpty(token)) {
+			uuid = StrUtil.getUUID();
+			RequestAgent ra = new RequestAgent(request);
+			String token = String.format("%s#%s#%s#%s#%s", username, ra.getIp(), ra.getBrowserName(), ra.getOsName(),
+					uuid);
+			int x = (int) (Math.random() * 100);
+			this.token = Coder.MD5(token, x);
+			md5times = x;
+		}
+		this.expirationtime = new Date().getTime() + 30 * 60 * 1000;
+		userlist.put(token, this);
+		return token;
+	}
+
+	/**
+	 * 校验token
+	 * 
+	 * @param _token
+	 * @param request
+	 * @return
+	 */
+	public static User checkToken(String _token, HttpServletRequest request) {
+		if (userlist.containsKey(_token)) {
+			User u = userlist.get(_token);
+			if (u.expirationtime < new Date().getTime()) {
+				return null;
+			}
+			RequestAgent ra = new RequestAgent(request);
+			String token = String.format("%s#%s#%s#%s#%s", u.username, ra.getIp(), ra.getBrowserName(), ra.getOsName(),
+					u.uuid);
+			return Coder.MD5(token, u.md5times).equals(_token) ? u : null;
+		}
+		return null;
+	}
+
+	private String username;// 用户名
+	private String password;// 密码
+	private String directory;// 目录
+
+	private int md5times;// md5加密次数
+	private String uuid;// 随机id
+	private String token;
+	private long expirationtime;// 过期时间
+
+	private User(String username, String password, String directory) {
+		this.username = username;
+		this.password = password;
+		this.directory = directory;
 	}
 
 	public void setExpirationtime(long expirationtime) {
 		this.expirationtime = expirationtime;
-	}
-
-	public String getToken() {
-		return token;
 	}
 
 	public void setToken(String token) {
@@ -42,10 +133,10 @@ public class User {
 	}
 
 	public String getDirectory() {
-		return this.directory;
+		return directory;
 	}
 
 	public String getUsername() {
-		return this.username;
+		return username;
 	}
 }

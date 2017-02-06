@@ -22,13 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import name.zjq.blog.pcd.bo.User;
-import name.zjq.blog.pcd.interceptor.TokenAuthInterceptor;
+import name.zjq.blog.pcd.interceptor.LoginUserAuth;
 import name.zjq.blog.pcd.utils.Coder;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 @Controller
 public class PlayController {
 	private static final Log logger = LogFactory.getLog(PlayController.class);
+
 	/**
 	 * 视频播放
 	 * 
@@ -37,7 +38,7 @@ public class PlayController {
 	@RequestMapping(value = "/play/{path}")
 	@ResponseBody
 	public void filePlay(HttpServletRequest request, HttpServletResponse response, @PathVariable("path") String path,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();

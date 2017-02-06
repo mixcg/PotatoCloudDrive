@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import name.zjq.blog.pcd.utils.Coder;
 
 public class RSAEncrypt {
-	private final Log logger = LogFactory.getLog(StartupListener.class);
+	private final Log logger = LogFactory.getLog(RSAEncrypt.class);
 
 	private final String KEY_ALGORITHM = "RSA";
 	private byte[] pubKey;// 公钥
@@ -100,6 +100,7 @@ public class RSAEncrypt {
 			// 私钥
 			RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
 			this.priKey = privateKey.getEncoded();
+			logger.error("初始化密钥成功！");
 		} catch (Exception e) {
 			logger.error("初始化密钥异常！", e);
 			System.exit(1);

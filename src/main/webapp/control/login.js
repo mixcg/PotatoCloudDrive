@@ -36,8 +36,12 @@ function LoginControl() {
 					obj.loginAuth();
 				}
 			},
-			error : function() {
-				toastr.error("啊哦，出错了！");
+			error : function(error) {
+				if (error) {
+					toastr.error(error);
+				} else {
+					toastr.error("啊哦，出错了！");
+				}
 			}
 		});
 	}
@@ -63,8 +67,12 @@ function LoginControl() {
 					}
 				}
 			},
-			error : function() {
-				toastr.error("啊哦，出错了！");
+			error : function(error) {
+				if (error) {
+					toastr.error(error);
+				} else {
+					toastr.error("啊哦，出错了！");
+				}
 			}
 		});
 	}

@@ -8,12 +8,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import name.zjq.blog.pcd.bo.User;
-import name.zjq.blog.pcd.config.UserConfig;
 import name.zjq.blog.pcd.utils.StrUtil;
 
-public class TokenAuthInterceptor implements HandlerInterceptor {
-	public static final String TOKEN_NAME = "token";
-	public static final String ATTRIBUTE_NAME = "AuthUser";
+public class LoginUserAuth implements HandlerInterceptor {
+	public static final String TOKEN_NAME = "pcdtoken";
+	public static final String LOGIN_USER = "loginUser";
 
 	public void afterCompletion(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2, Exception arg3)
 			throws Exception {
@@ -33,22 +32,22 @@ public class TokenAuthInterceptor implements HandlerInterceptor {
 		if (StrUtil.isNullOrEmpty(token)) {
 			Cookie[] cookies = arg0.getCookies();
 			for (Cookie c : cookies) {
-				if (c.getName().equals("pcdtoken")) {
+				if (c.getName().equals(TOKEN_NAME)) {
 					token = c.getValue();
 					break;
 				}
 			}
 			if (StrUtil.isNullOrEmpty(token)) {
-				arg1.setStatus(401);
+				arg1.sendError(401, "认证失败！请重新登录");
 				return false;
 			}
 		}
-		User u = UserConfig.checkToken(token, arg0);
+		User u = User.checkToken(token, arg0);
 		if (u == null) {
-			arg1.setStatus(401);
+			arg1.sendError(401, "认证失败！请重新登录");
 			return false;
 		}
-		arg0.setAttribute(ATTRIBUTE_NAME, u);
+		arg0.setAttribute(LOGIN_USER, u);
 		return true;
 	}
 }

@@ -275,14 +275,18 @@ function logout() {
 		type : 'POST',
 		url : "api/login/logout",
 		data : {
-			token : CookieUtil.getCookie("pcdtoken")
+			pcdtoken : CookieUtil.getCookie("pcdtoken")
 		},
 		success : function(data) {
 			CookieUtil.delCookie("pcdtoken");
 			window.location.href = "login.html";
 		},
-		error : function() {
-			toastr.error("啊哦，出错了！");
+		error : function(error) {
+			if (error) {
+				toastr.error(error);
+			} else {
+				toastr.error("啊哦，出错了！");
+			}
 		}
 	});
 }
@@ -293,14 +297,14 @@ function ajaxRequest(url, callbackObj) {
 		type : 'POST',
 		url : url,
 		data : {
-			token : token
+			pcdtoken : token
 		},
 		success : function(data) {
 			callbackObj.callback(data);
 		},
-		error : function(data) {
-			if (data.status == 401) {
-				toastr.error("认证失败！请重新登录");
+		error : function(error) {
+			if (error) {
+				toastr.error(error);
 			} else {
 				toastr.error("啊哦，出错了！");
 			}

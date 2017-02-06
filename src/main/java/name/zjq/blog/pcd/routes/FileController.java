@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import name.zjq.blog.pcd.bo.DriveFile;
 import name.zjq.blog.pcd.bo.FileShare;
 import name.zjq.blog.pcd.bo.User;
-import name.zjq.blog.pcd.config.DBInit;
-import name.zjq.blog.pcd.interceptor.TokenAuthInterceptor;
+import name.zjq.blog.pcd.interceptor.LoginUserAuth;
 import name.zjq.blog.pcd.utils.Coder;
 import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
@@ -29,7 +28,7 @@ public class FileController {
 	 */
 	@RequestMapping(value = "/file/", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR getFileLst(@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+	public PR getFileLst(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		return getFileList(null, loginUser);
 	}
 
@@ -41,7 +40,7 @@ public class FileController {
 	@RequestMapping(value = "/file/{path}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR getFileList(@PathVariable("path") String path,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
@@ -66,7 +65,7 @@ public class FileController {
 	@RequestMapping(value = "/file/del/{path}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR delFile(@PathVariable("path") String path,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			return new PR(400, "文件不存在", null);
 		} else {
@@ -95,7 +94,7 @@ public class FileController {
 	@RequestMapping(value = "/file/rename/{path}/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR rnameFile(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			return new PR(400, "文件不存在", null);
 		} else {
@@ -119,7 +118,7 @@ public class FileController {
 	@RequestMapping(value = "/file/newfile/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR createNewFile(@PathVariable("newfilename") String newfilename,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		return createNewFile(null, newfilename, loginUser);
 	}
 
@@ -131,7 +130,7 @@ public class FileController {
 	@RequestMapping(value = "/file/newfile/{path}/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR createNewFile(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
@@ -155,7 +154,7 @@ public class FileController {
 	@RequestMapping(value = "/file/newdir/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR createNewDir(@PathVariable("newfilename") String newfilename,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		return createNewDir(null, newfilename, loginUser);
 	}
 
@@ -167,7 +166,7 @@ public class FileController {
 	@RequestMapping(value = "/file/newdir/{path}/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR createNewDir(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
@@ -189,14 +188,14 @@ public class FileController {
 	}
 
 	/**
-	 * 新建文件夹
+	 * 文件分享
 	 * 
 	 * @return
 	 */
 	@RequestMapping(value = "/file/share/{path}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR shareFiles(@PathVariable("path") String path,
-			@RequestAttribute(TokenAuthInterceptor.ATTRIBUTE_NAME) User loginUser) {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			return new PR(400, "文件不存在", null);
 		} else {

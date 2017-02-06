@@ -4,11 +4,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import eu.bitwalker.useragentutils.UserAgent;
 
-public class RequestInfo {
+public class RequestAgent {
 	private HttpServletRequest request;
 	private UserAgent agent;
 
-	public RequestInfo(HttpServletRequest request) {
+	public RequestAgent(HttpServletRequest request) {
 		this.request = request;
 		agent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
 	}
