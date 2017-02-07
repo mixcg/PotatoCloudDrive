@@ -27,7 +27,7 @@ public class FileController {
 	 *
 	 * @return
 	 */
-	@RequestMapping(value = "/list/", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/list", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public PR getFileLst(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		return getFileList(null, loginUser);
@@ -39,7 +39,7 @@ public class FileController {
 	 * @param loginUser
 	 * @return
 	 */
-	@RequestMapping(value ="/list/{path}", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value ="/list/{path}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public PR getFileList(@PathVariable String path, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {

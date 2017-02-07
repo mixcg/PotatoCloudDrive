@@ -10,11 +10,65 @@ $.confirm.options = {
 /**
  * 网盘----------------------------
  */
-var token = "";
+var token = new Object();
+var fileListTRDefault = null;
+
 $(function() {
-	token = CookieUtil.getCookie("pcdtoken");
-	File.getFileList("");
+	token.pcdtoken = CookieUtil.getCookie("pcdtoken");
+	ReqFileList("");
 });
+// 请求文件列表
+function ReqFileList(filepath) {
+	if (!filepath) {
+		filepath = "api/file/list"
+	} else {
+		filepath = "api/file/list/" + filepath;
+	}
+	CustomAjax.ajaxRequest(filepath, "GET", token, loadFileList);
+}
+// 加载文件列表
+function loadFileList(data) {
+	var datas = data.result;
+	if (!fileListTRDefault) {
+		fileListTRDefault = $('#filetable tbody tr').eq(0);
+	}
+	$('#filetable tbody').empty();
+	for (var i = 0; i < datas.length; i++) {
+		var tmptr = fileListTRDefault.clone();
+		var tmpdata = datas[i];
+		if (tmpdata.fileType == "文件夹") {
+			tmptr.find("td").eq(1).find("a").html(tmpdata.fileName);
+		} else {
+			tmptr.find("td").eq(0).find("img").attr("src", "img/" + tmpdata.fileType + ".png");
+			tmptr.find("td").eq(1).html(tmpdata.fileName);
+		}
+		tmptr.find("td").eq(3).html(tmpdata.fileType);
+		tmptr.find("td").eq(4).html(tmpdata.descSize);
+		tmptr.find("td").eq(5).html(tmpdata.lastModifiedTime);
+		tmptr.attr("path", tmpdata.base64filepath);
+		$('#filetable tbody').append(tmptr);
+	}
+	$("#filetable td").hover(function() {
+		$(this).parent().find("td").eq(2).find("div").css('visibility', 'visible');
+	}, function() {
+		$(this).parent().find("td").eq(2).find("div").css('visibility', 'hidden');
+	})
+}
+// 进入指定目录
+function EnterDir(label) {
+	var path = $(label).parent().parent().attr("path");
+	var li = $("#dirul").find("li").eq(0).clone();
+	li.find("a").attr("path", path).html($(label).html());
+	$("#dirul").append(li);
+	ReqFileList(path);
+}
+// 返回到指定目录
+function BackDir(label) {
+	var index = $(label).parent().index();
+	$("#dirul li:gt(" + index + ")").remove();
+	var path = $(label).attr("path");
+	ReqFileList(path);
+}
 
 // 文件操作
 function FileOperate(type, filepath, filename) {
@@ -59,61 +113,67 @@ function FileOperate(type, filepath, filename) {
 			});
 			break;
 		case "rename":
-			$.confirm({
-				text : "<div class='row'>" + "<div class='col-md-12'><label for='newfilename'>新文件名称</label><input type='text' class='form-control' id='newfilename' required='required' /></div>"
-						+ "</div>",
-				title : "重命名：" + filename,
-				confirm : function(button) {
-					var newfilename = $('#newfilename').val();
-					newfilename = Base64.encodeURI(newfilename);
-					ajaxRequest("api/file/rename/" + filepath + "/" + newfilename, obj);
-				},
-				cancel : function(button) {
-				}
-			});
+			$
+					.confirm({
+						text : "<div class='row'>"
+								+ "<div class='col-md-12'><label for='newfilename'>新文件名称</label><input type='text' class='form-control' id='newfilename' required='required' /></div>"
+								+ "</div>",
+						title : "重命名：" + filename,
+						confirm : function(button) {
+							var newfilename = $('#newfilename').val();
+							newfilename = Base64.encodeURI(newfilename);
+							ajaxRequest("api/file/rename/" + filepath + "/" + newfilename, obj);
+						},
+						cancel : function(button) {
+						}
+					});
 			$('#newfilename').val(filename);
 			break;
 		case "share":
 			ajaxRequest("api/file/share/" + filepath, obj);
 			break;
 		case "createNewFile":
-			$.confirm({
-				text : "<div class='row'>" + "<div class='col-md-12'><label for='newfilename'>文件名称</label><input type='text' class='form-control' id='newfilename' required='required' /></div>"
-						+ "</div>",
-				title : "新建文件",
-				confirm : function(button) {
-					var thisdir = $("#dirul li:last").find("a").attr("path");
-					var newfilename = $('#newfilename').val();
-					newfilename = Base64.encodeURI(newfilename);
-					if (!thisdir) {
-						ajaxRequest("api/file/newfile/" + newfilename, obj);
-					} else {
-						ajaxRequest("api/file/newfile/" + thisdir + "/" + newfilename, obj);
-					}
-				},
-				cancel : function(button) {
-				}
-			});
+			$
+					.confirm({
+						text : "<div class='row'>"
+								+ "<div class='col-md-12'><label for='newfilename'>文件名称</label><input type='text' class='form-control' id='newfilename' required='required' /></div>"
+								+ "</div>",
+						title : "新建文件",
+						confirm : function(button) {
+							var thisdir = $("#dirul li:last").find("a").attr("path");
+							var newfilename = $('#newfilename').val();
+							newfilename = Base64.encodeURI(newfilename);
+							if (!thisdir) {
+								ajaxRequest("api/file/newfile/" + newfilename, obj);
+							} else {
+								ajaxRequest("api/file/newfile/" + thisdir + "/" + newfilename, obj);
+							}
+						},
+						cancel : function(button) {
+						}
+					});
 			break;
 		case "createNewDir":
-			$.confirm({
-				text : "<div class='row'>" + "<div class='col-md-12'><label for='newfilename'>文件夹名称</label><input type='text' class='form-control' id='newfilename' required='required' /></div>"
-						+ "</div>",
-				title : "新建文件夹",
-				confirm : function(button) {
-					var thisdir = $("#dirul li:last").find("a").attr("path");
-					var newfilename = $('#newfilename').val();
-					newfilename = Base64.encodeURI(newfilename);
-					if (!thisdir) {
-						ajaxRequest("api/file/newdir/" + newfilename, obj);
-					} else {
-						ajaxRequest("api/file/newdir/" + thisdir + "/" + newfilename, obj);
-					}
+			$
+					.confirm({
+						text : "<div class='row'>"
+								+ "<div class='col-md-12'><label for='newfilename'>文件夹名称</label><input type='text' class='form-control' id='newfilename' required='required' /></div>"
+								+ "</div>",
+						title : "新建文件夹",
+						confirm : function(button) {
+							var thisdir = $("#dirul li:last").find("a").attr("path");
+							var newfilename = $('#newfilename').val();
+							newfilename = Base64.encodeURI(newfilename);
+							if (!thisdir) {
+								ajaxRequest("api/file/newdir/" + newfilename, obj);
+							} else {
+								ajaxRequest("api/file/newdir/" + thisdir + "/" + newfilename, obj);
+							}
 
-				},
-				cancel : function(button) {
-				}
-			});
+						},
+						cancel : function(button) {
+						}
+					});
 			break;
 		case "play":
 			window.location.href = 'play.html?url=' + filepath;
@@ -163,12 +223,13 @@ function FileOperate(type, filepath, filename) {
 
 	this.__shareFile = function() {
 		if (this.returndata.status == 200) {
-			$.confirm({
-				confirmButton : "关闭窗口",
-				text : "<div class='row'><div class='col-md-12'><label for='sharelink'>文件分享链接</label><input type='text' class='form-control' id='sharelink' onclick='this.select()'/></div></div>"
-						+ "<div class='row'><div class='col-md-4'><label for='sharepwd'>访问密码</label><input type='text' class='form-control' id='sharepwd' onclick='this.select()'/></div><div class='col-md-8'></div></div>",
-				title : "分享成功！",
-			});
+			$
+					.confirm({
+						confirmButton : "关闭窗口",
+						text : "<div class='row'><div class='col-md-12'><label for='sharelink'>文件分享链接</label><input type='text' class='form-control' id='sharelink' onclick='this.select()'/></div></div>"
+								+ "<div class='row'><div class='col-md-4'><label for='sharepwd'>访问密码</label><input type='text' class='form-control' id='sharepwd' onclick='this.select()'/></div><div class='col-md-8'></div></div>",
+						title : "分享成功！",
+					});
 			$("#sharelink").val(getRootPath() + "/api/share/" + this.returndata.result.id);
 			$("#sharepwd").val(this.returndata.result.password);
 		} else {
@@ -178,29 +239,12 @@ function FileOperate(type, filepath, filename) {
 }
 
 var File = {
-	// 获取文件列表
-	getFileList : function(path) {
-		new FileOperate("getFileList", path).doRequest();
-	},
 	// 文件操作
 	fileManage : function(obj) {
 		var path = $(obj).parent().attr("path");
 		var type = $(obj).attr("type");
 		var filename = $(obj).parent().attr("filename");
 		new FileOperate(type, path, filename).doRequest();
-	},
-	// 进入目录
-	enterDir : function(obj) {
-		var path = $(obj).parent().next().find("div").attr("path");
-		$("#dirul").append("<li><a href='javascript:void(0)' path ='" + path + "' onclick='File.backDir(this)'>" + obj.textContent + "</a></li>");
-		File.getFileList(path);
-	},
-	// 加载指定目录
-	backDir : function(obj) {
-		var index = $(obj).parent().index();
-		$("#dirul li:gt(" + index + ")").remove();
-		var b = $(obj).attr("path");
-		File.getFileList(b);
 	}
 }
 
@@ -221,10 +265,12 @@ var table = {
 				img = "<img src='img/folder.png' class='img-responsive'>"
 				td2 = "<td><a href='javascript:void(0)' onclick='File.enterDir(this)'>" + data.fileName + "</a></td>";
 			} else {
-				img = "<img src='img/" + data.fileType + ".png' class='img-responsive' base64filepath='" + data.base64filepath + "' onerror='ImgError(this)'>";
+				img = "<img src='img/" + data.fileType + ".png' class='img-responsive' base64filepath='" + data.base64filepath
+						+ "' onerror='ImgError(this)'>";
 				td2 = "<td>" + data.fileName + "</td>";
 				if (data.fileType.toLowerCase() == "mp4") {
-					td3 += "<a href='play.html?url=" + data.base64filepath + "' target='_blank'><span  title='播放' class='glyphicon glyphicon-facetime-video'></span></a>&nbsp;&nbsp;&nbsp;&nbsp;";
+					td3 += "<a href='play.html?url=" + data.base64filepath
+							+ "' target='_blank'><span  title='播放' class='glyphicon glyphicon-facetime-video'></span></a>&nbsp;&nbsp;&nbsp;&nbsp;";
 				}
 			}
 			var td1 = "<tr><td>" + img + "</td>";
@@ -248,13 +294,10 @@ var table = {
 /**
  * 分享列表----------------------------
  */
-function loadShareList(){
+function loadShareList() {
 	$("#wangpan").hide();
 	$("#sharelist").show();
 }
-
-
-
 
 // 图片加载失败处理
 function ImgError(obj) {
@@ -293,7 +336,6 @@ function logout() {
 		}
 	});
 }
-
 
 function ajaxRequest(url, callbackObj) {
 	$.ajax({

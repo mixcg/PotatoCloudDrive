@@ -43,7 +43,7 @@
 				</nav>
 			</div>
 		</div>
-		
+
 		<!-- 网盘 -->
 		<div class="row" id="wangpan">
 			<div class="col-md-2">
@@ -76,6 +76,7 @@
 						<tr>
 							<th colspan="11">
 								<ol class="breadcrumb" id="dirul">
+									<li><a href='javascript:void(0)' path ='' onclick="BackDir(this)">主目录</a></li>
 								</ol>
 							</th>
 						</tr>
@@ -89,7 +90,24 @@
 						</tr>
 					</thead>
 					<tbody>
-
+						<tr>
+							<td>
+								<img src='img/folder.png' class='img-responsive' onerror='ImgError(this)'>
+							</td>
+							<td>
+								<a href='javascript:void(0)' onclick='EnterDir(this)' path=''></a>
+							</td>
+							<td colspan="6">
+								<div style='visibility:hidden;'>
+									<a href='javascipt:void(0)' type='mv' onclick='MvFile(this)'>
+										<span title='移动' class='glyphicon glyphicon-share-alt'></span>
+									</a>&nbsp;&nbsp;&nbsp;&nbsp;
+								</div>
+							</td>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
 					</tbody>
 				</table>
 			</div>
@@ -124,6 +142,7 @@
 <script src="js/prettify.js"></script>
 <script src="js/jquery.confirm.min.js"></script>
 <script src="js/base64.min.js"></script>
+<script src="control/CustomAjax.js"></script>
 <script src="control/cookie.js"></script>
 <script src="control/main.js"></script>
 </html>

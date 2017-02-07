@@ -40,13 +40,14 @@ public class DriveFile {
 		this.fileName = fileArg.getFileName().toString();
 		if (this.isDir) {
 			this.fileType = "文件夹";
+			this.descSize = "";
 		} else {
 			if (fileName.lastIndexOf(".") > -1) {
 				this.fileType = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
 			}
+			this.descSize = calculateDescSize();
 		}
 		this.fileSize = attrs.size();
-		this.descSize = calculateDescSize();
 		String filepath = fileArg.toAbsolutePath().toString().replace("\\", "/").replace(maindir, "");
 		this.base64filepath = Coder.encoderURLBASE64((filepath).getBytes());
 		this.lastModifiedTime = formatTime(attrs.lastModifiedTime().toMillis());
