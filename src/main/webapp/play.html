@@ -10,18 +10,53 @@
 <link href="css/bootstrap.css" rel="stylesheet">
 <link href="css/video-js.min.css" rel="stylesheet">
 <style type="text/css">
-.col-center-block {
-	float: none;
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
+#parent {
+    display: flex;
+    width: 400px; /* 宽度值，随便啦 */
+    height: 400px;  /* 高度值，随便啦 */
+    background-color: yellow;
+}
+
+#item {
+    width: 100px;/* 宽度值，随便啦 */
+    height: 20px;/* 高度值，随便啦 */
+    margin: auto;
+    background-color: red; /* Magic! */
 }
 </style>
 </head>
 
 <body>
-	<div class="row">
-		<div class="col-md-1"></div>
+	<div id="parent">
+		<div id="item">
+			<video id="my-video" class="video-js" controls preload="auto"
+				width="auto" height="auto" data-setup="{}">
+				<source src="" type='video/mp4' id="videoSource">
+				<p class="vjs-no-js">
+					To view this video please enable JavaScript, and consider upgrading
+					to a web browser that <a
+						href="http://videojs.com/html5-video-support/" target="_blank">supports
+						HTML5 video</a>
+				</p>
+			</video>
+		</div>
+	</div>
+
+
+	<!-- <div class="row">
+		<div class="col-xs-6 col-md-4 col-center-block"> 
+			<video id="my-video" class="video-js" controls preload="auto"
+				width="auto" height="auto" data-setup="{}">
+				<source src="" type='video/mp4' id="videoSource">
+				<p class="vjs-no-js">
+					To view this video please enable JavaScript, and consider upgrading
+					to a web browser that <a
+						href="http://videojs.com/html5-video-support/" target="_blank">supports
+						HTML5 video</a>
+				</p>
+			</video>
+		</div> -->
+	<!-- <div class="col-md-1"></div>
 		<div class="col-md-9">
 			<div class="col-center-block">
 				<video id="my-video" class="video-js" controls preload="auto"
@@ -36,7 +71,7 @@
 				</video>
 			</div>
 		</div>
-		<div class="col-md-1"></div>
+		<div class="col-md-1"></div> -->
 	</div>
 	<script src="js/jquery.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>

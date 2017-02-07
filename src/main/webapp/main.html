@@ -5,8 +5,9 @@
 <link href="css/bootstrap.css" rel="stylesheet">
 <link href="css/toastr.css" rel="stylesheet">
 <style type="text/css">
-#table td a {
-	color: #000
+.tablediv a{
+	color: #000;
+	text-decoration:none
 }
 </style>
 </head>
@@ -98,9 +99,25 @@
 								<a href='javascript:void(0)' onclick='EnterDir(this)' path=''></a>
 							</td>
 							<td colspan="6">
-								<div style='visibility:hidden;'>
-									<a href='javascipt:void(0)' type='mv' onclick='MvFile(this)'>
-										<span title='移动' class='glyphicon glyphicon-share-alt'></span>
+								<div style='visibility:hidden;' class="tablediv">
+									&nbsp;&nbsp;&nbsp;&nbsp;
+									<a href='javascipt:void(0)' type='download' onclick='FileOperate(this)'>
+										<span  title='下载' class='glyphicon glyphicon-download-alt'>&nbsp;&nbsp;</span>
+									</a>
+									<a href='javascipt:void(0)' type='play' onclick='FileOperate(this)'>
+										<span  title='播放' class='glyphicon glyphicon-facetime-video'>&nbsp;&nbsp;</span>
+									</a>
+									<a href='javascipt:void(0)' type='mv' onclick='FileOperate(this)'>
+										<span title='移动' class='glyphicon glyphicon-share-alt'>&nbsp;&nbsp;</span>
+									</a>
+									<a href='javascipt:void(0)' type='rename' onclick='FileOperate(this)'>
+										<span title='重命名' class='glyphicon glyphicon-pencil'>&nbsp;&nbsp;</span>
+									</a>
+									<a href='javascipt:void(0)' type='share' onclick='FileOperate(this)'>
+										<span title='分享' class='glyphicon glyphicon-send'>&nbsp;&nbsp;</span>
+									</a>
+									<a href='javascipt:void(0)' type='del' onclick='FileOperate(this)'>
+										<span title='删除' class='glyphicon glyphicon-trash'>&nbsp;&nbsp;</span>
 									</a>&nbsp;&nbsp;&nbsp;&nbsp;
 								</div>
 							</td>

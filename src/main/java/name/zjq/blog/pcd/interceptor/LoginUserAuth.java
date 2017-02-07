@@ -38,13 +38,17 @@ public class LoginUserAuth implements HandlerInterceptor {
 				}
 			}
 			if (StrUtil.isNullOrEmpty(token)) {
-				arg1.sendError(401, "认证失败！请重新登录");
+				arg1.setContentType("text/plain;charset=UTF-8");
+				arg1.setStatus(401);
+				arg1.getWriter().write("认证失败！请重新登录");
 				return false;
 			}
 		}
 		User u = User.checkToken(token, arg0);
 		if (u == null) {
-			arg1.sendError(401, "认证失败！请重新登录");
+			arg1.setContentType("text/plain;charset=UTF-8");
+			arg1.setStatus(401);
+			arg1.getWriter().write("认证失败！请重新登录");
 			return false;
 		}
 		arg0.setAttribute(LOGIN_USER, u);

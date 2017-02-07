@@ -13,7 +13,9 @@ var CustomAjax = {
 			url : url,
 			data : reqdata,
 			success : function(returndata) {
-				callbackFunc(returndata);
+				if(callbackFunc){
+					callbackFunc(returndata);
+				}
 			},
 			error : function(jqXHR) {
 				toastr.error(jqXHR.responseText);
