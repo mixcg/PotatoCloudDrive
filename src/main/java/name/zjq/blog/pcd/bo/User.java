@@ -77,8 +77,7 @@ public class User {
 		if (StrUtil.isNullOrEmpty(token)) {
 			uuid = StrUtil.getUUID();
 			RequestAgent ra = new RequestAgent(request);
-			String token = String.format("%s#%s#%s#%s#%s", username, ra.getIp(), ra.getBrowserName(), ra.getOsName(),
-					uuid);
+			String token = new StringBuilder().append(username).append(ra.getIp()).append(ra.getBrowserName()).append(ra.getOsName()).append(uuid).toString();
 			int x = (int) (Math.random() * 100);
 			this.token = Coder.MD5(token, x);
 			md5times = x;
@@ -102,8 +101,7 @@ public class User {
 				return null;
 			}
 			RequestAgent ra = new RequestAgent(request);
-			String token = String.format("%s#%s#%s#%s#%s", u.username, ra.getIp(), ra.getBrowserName(), ra.getOsName(),
-					u.uuid);
+			String token = new StringBuilder().append(u.username).append(ra.getIp()).append(ra.getBrowserName()).append(ra.getOsName()).append(u.uuid).toString();
 			return Coder.MD5(token, u.md5times).equals(_token) ? u : null;
 		}
 		return null;

@@ -20,13 +20,14 @@ import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 @Controller
+@RequestMapping("/file")
 public class FileController {
 	/**
 	 * 获取文件列表
-	 * 
+	 *
 	 * @return
 	 */
-	@RequestMapping(value = "/file/", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/list/", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public PR getFileLst(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		return getFileList(null, loginUser);
@@ -34,13 +35,13 @@ public class FileController {
 
 	/**
 	 * 获取指定目录文件列表
-	 * 
+	 * @param path 文件夹路径
+	 * @param loginUser
 	 * @return
 	 */
-	@RequestMapping(value = "/file/{path}", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value ="/list/{path}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR getFileList(@PathVariable("path") String path,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR getFileList(@PathVariable String path, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
@@ -59,13 +60,13 @@ public class FileController {
 
 	/**
 	 * 删除文件
-	 * 
+	 * @param path 待删除文件路径
+	 * @param loginUser
 	 * @return
 	 */
-	@RequestMapping(value = "/file/del/{path}", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/del/{path}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR delFile(@PathVariable("path") String path,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR delFile(@PathVariable("path") String path, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			return new PR(400, "文件不存在", null);
 		} else {
@@ -91,10 +92,9 @@ public class FileController {
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/file/rename/{path}/{newfilename}", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value = "/rename/{path}/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR rnameFile(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR rnameFile(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			return new PR(400, "文件不存在", null);
 		} else {
@@ -117,8 +117,7 @@ public class FileController {
 
 	@RequestMapping(value = "/file/newfile/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR createNewFile(@PathVariable("newfilename") String newfilename,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR createNewFile(@PathVariable("newfilename") String newfilename, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		return createNewFile(null, newfilename, loginUser);
 	}
 
@@ -129,8 +128,7 @@ public class FileController {
 	 */
 	@RequestMapping(value = "/file/newfile/{path}/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR createNewFile(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR createNewFile(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
@@ -153,8 +151,7 @@ public class FileController {
 
 	@RequestMapping(value = "/file/newdir/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR createNewDir(@PathVariable("newfilename") String newfilename,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR createNewDir(@PathVariable("newfilename") String newfilename, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		return createNewDir(null, newfilename, loginUser);
 	}
 
@@ -165,8 +162,7 @@ public class FileController {
 	 */
 	@RequestMapping(value = "/file/newdir/{path}/{newfilename}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR createNewDir(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR createNewDir(@PathVariable("path") String path, @PathVariable("newfilename") String newfilename, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
@@ -194,8 +190,7 @@ public class FileController {
 	 */
 	@RequestMapping(value = "/file/share/{path}", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR shareFiles(@PathVariable("path") String path,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR shareFiles(@PathVariable("path") String path, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		if (StrUtil.isNullOrEmpty(path)) {
 			return new PR(400, "文件不存在", null);
 		} else {

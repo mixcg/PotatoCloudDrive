@@ -100,7 +100,7 @@ public class RSAEncrypt {
 			// 私钥
 			RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
 			this.priKey = privateKey.getEncoded();
-			logger.error("初始化密钥成功！");
+			logger.info("初始化密钥成功！");
 		} catch (Exception e) {
 			logger.error("初始化密钥异常！", e);
 			System.exit(1);

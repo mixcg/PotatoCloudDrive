@@ -11,7 +11,7 @@ public class StartupListener implements ApplicationContextAware {
 	public void setApplicationContext(ApplicationContext arg0) throws BeansException {
 		RSAEncrypt.getInstance();
 		User.init();
-		DBInit.init();
+		DBConnection.init();
 	}
 
 }

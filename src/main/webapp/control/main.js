@@ -249,7 +249,8 @@ var table = {
  * 分享列表----------------------------
  */
 function loadShareList(){
-	
+	$("#wangpan").hide();
+	$("#sharelist").show();
 }
 
 
@@ -269,7 +270,9 @@ function getRootPath() {
 	var projectName = pathName.substring(0, pathName.substr(1).indexOf('/') + 1);
 	return (localhostPaht + projectName);
 }
-// 退出登录
+/**
+ * 退出登录----------------------------
+ */
 function logout() {
 	$.ajax({
 		type : 'POST',

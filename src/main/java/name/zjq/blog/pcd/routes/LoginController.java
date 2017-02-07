@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import name.zjq.blog.pcd.bo.User;
 import name.zjq.blog.pcd.config.RSAEncrypt;
+import name.zjq.blog.pcd.exceptionhandler.CustomizeLogicException;
 import name.zjq.blog.pcd.interceptor.LoginUserAuth;
 import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 @Controller
-@RequestMapping("/login")
+@RequestMapping("/login/auth")
 public class LoginController {
 
 	/**
@@ -23,7 +24,7 @@ public class LoginController {
 	 * 
 	 * @return
 	 */
-	@RequestMapping("/getpubkey")
+	@RequestMapping(method = RequestMethod.GET)
 	@ResponseBody
 	public String getpubkey() {
 		return RSAEncrypt.getInstance().getPubKey();
@@ -34,14 +35,15 @@ public class LoginController {
 	 * 
 	 * @param request
 	 * @return
+	 * @throws CustomizeLogicException
 	 */
-	@RequestMapping(value = "/auth", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR auth(HttpServletRequest request) {
+	public PR auth(HttpServletRequest request) throws CustomizeLogicException {
 		String username = request.getParameter("username");
 		String password = request.getParameter("password");
 		if (StrUtil.isNullOrEmpty(username) || StrUtil.isNullOrEmpty(password)) {
-			return new PR(400, "参数非法【用户名或密码为空】", null);
+			throw new CustomizeLogicException(401, "参数非法【用户名或密码为空】", null);
 		}
 		username = RSAEncrypt.getInstance().decryptByPriKey(username);
 		password = RSAEncrypt.getInstance().decryptByPriKey(password);
@@ -50,7 +52,8 @@ public class LoginController {
 			String token = u.createToken(request);
 			return new PR(200, "登录成功", token);
 		}
-		return new PR(403, "用户名或密码错误", null);
+		throw new CustomizeLogicException(401, "用户名或密码错误", null);
+		// return new PR(403, "用户名或密码错误", null);
 	}
 
 	/**
@@ -58,7 +61,7 @@ public class LoginController {
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(method = RequestMethod.DELETE, produces = "application/json")
 	@ResponseBody
 	public PR logout(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		loginUser.setToken(null);

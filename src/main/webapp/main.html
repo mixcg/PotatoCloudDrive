@@ -23,9 +23,9 @@
 						<div class="collapse navbar-collapse"
 							id="bs-example-navbar-collapse-1">
 							<ul class="nav navbar-nav">
-								<li><a href="">网盘</a></li>
+								<li><a href="main.html">网盘</a></li>
 								<li><a href="#">传输</a></li>
-								<li><a href="#">分享</a></li>
+								<li><a href="javascipt:void(0)" onclick="loadShareList()">分享</a></li>
 							</ul>
 							<ul class="nav navbar-nav navbar-right">
 								<li class="dropdown"><a href="javascipt:void(0)"
@@ -43,6 +43,8 @@
 				</nav>
 			</div>
 		</div>
+		
+		<!-- 网盘 -->
 		<div class="row" id="wangpan">
 			<div class="col-md-2">
 				<ul class="nav nav-list" id="customNav" style="display: none">
@@ -95,14 +97,8 @@
 		<!-- 分享列表 -->
 		<div class="row" id="sharelist" style="display: none">
 			<div class="col-md-11" data-toggle="context">
-				<table class="table table-hover" id="filetable">
+				<table class="table table-hover" id="sharefiletable">
 					<thead>
-						<tr>
-							<th colspan="11">
-								<ol class="breadcrumb" id="dirul">
-								</ol>
-							</th>
-						</tr>
 						<tr>
 							<th></th>
 							<th>文件名</th>

@@ -1,7 +1,6 @@
 function LoginControl() {
 	this.username = $("#username").val();
 	this.password = $("#password").val();
-	this.pubkey = "";
 
 	this.login = function() {
 		var flag = this.logincheck();
@@ -24,61 +23,28 @@ function LoginControl() {
 
 	this.getPubkey = function() {
 		var obj = this;
-		$.ajax({
-			type : 'POST',
-			url : "api/login/getpubkey",
-			data : null,
-			success : function(data) {
-				if (!data) {
-					toastr.error("啊哦，出错了！");
-				} else {
-					obj.pubkey = data;
-					obj.loginAuth();
-				}
-			},
-			error : function(error) {
-				if (error) {
-					toastr.error(error);
-				} else {
-					toastr.error("啊哦，出错了！");
-				}
-			}
-		});
+		CustomAjax.ajaxRequest("api/login/auth", "GET", null, this.loginAuth);
 	}
 
-	this.loginAuth = function() {
-		var uname = RSAEncrypt.encrypt(this.pubkey, this.username);
-		var pwd = RSAEncrypt.encrypt(this.pubkey, this.password);
-		$.ajax({
-			type : 'POST',
-			url : "api/login/auth",
-			data : {
-				username : uname,
-				password : pwd
-			},
-			success : function(data) {
-				if (data) {
-					if (data.status != 200) {
-						toastr.error(data.resultdesc);
-					} else {
-						CookieUtil.delCookie("pcdtoken");
-						CookieUtil.setCookie("pcdtoken", data.result);
-						window.location.href = "main.html";
-					}
-				}
-			},
-			error : function(error) {
-				if (error) {
-					toastr.error(error);
-				} else {
-					toastr.error("啊哦，出错了！");
-				}
-			}
-		});
+	this.loginAuth = function(data) {
+		var uname = RSAEncrypt.encrypt(data, this.username);
+		var pwd = RSAEncrypt.encrypt(data, this.password);
+		var reqdata = {
+			username : uname,
+			password : pwd
+		};
+		CustomAjax.ajaxRequest("api/login/auth", "POST", reqdata,
+				this.loginSuccess);
+	}
+	this.loginSuccess = function(data) {
+		if (data) {
+			CookieUtil.delCookie("pcdtoken");
+			CookieUtil.setCookie("pcdtoken", data.result);
+			window.location.href = "main.html";
+		}
 	}
 }
 
 $("#loginButton").click(function() {
 	new LoginControl().login();
 });
-

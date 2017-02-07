@@ -3,7 +3,7 @@ package name.zjq.blog.pcd.bo;
 import java.util.Date;
 import java.util.List;
 
-import name.zjq.blog.pcd.config.DBInit;
+import name.zjq.blog.pcd.config.DBConnection;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 public class FileShare {
@@ -65,7 +65,7 @@ public class FileShare {
 	public boolean addNewShare() {
 		String querysql = "select * from fileshare where owner='%s' and filepath='%s'";
 		querysql = String.format(querysql, this.owner, this.filepath);
-		List<FileShare> shareList = DBInit.executeQuery(querysql, FileShare.class);
+		List<FileShare> shareList = DBConnection.executeQuery(querysql, FileShare.class);
 		if (shareList != null && !shareList.isEmpty()) {
 			FileShare fileshare = shareList.get(0);
 			this.id = fileshare.getId();
@@ -78,7 +78,7 @@ public class FileShare {
 		} else {
 			String sql = "insert into fileshare values ('%s','%s','%s','%s',%s,0)";
 			sql = String.format(sql, this.id, this.owner, this.password, this.filepath, this.sharedate);
-			return DBInit.executeUpdate(sql) > 0;
+			return DBConnection.executeUpdate(sql) > 0;
 		}
 	}
 
