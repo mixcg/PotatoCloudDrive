@@ -1,7 +1,4 @@
 function LoginControl() {
-	this.username = $("#username").val();
-	this.password = $("#password").val();
-
 	this.login = function() {
 		var flag = this.logincheck();
 		if (flag) {
@@ -10,11 +7,11 @@ function LoginControl() {
 	};
 
 	this.logincheck = function() {
-		if (!this.username) {
+		if (!$("#username").val()) {
 			toastr.error($("#username").attr('placeholder'));
 			return false;
 		}
-		if (!this.password) {
+		if (!$("#password").val()) {
 			toastr.error($("#password").attr('placeholder'));
 			return false;
 		}
@@ -27,8 +24,8 @@ function LoginControl() {
 	}
 
 	this.loginAuth = function(data) {
-		var uname = RSAEncrypt.encrypt(data, this.username);
-		var pwd = RSAEncrypt.encrypt(data, this.password);
+		var uname = RSAEncrypt.encrypt(data, $("#username").val());
+		var pwd = RSAEncrypt.encrypt(data, $("#password").val());
 		var reqdata = {
 			username : uname,
 			password : pwd
