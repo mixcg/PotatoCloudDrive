@@ -75,7 +75,15 @@ public class DBConnection {
 				T t = classz.newInstance();
 				for (Field field : fields) {
 					field.setAccessible(true);
-					field.set(t, rs.getObject(field.getName()));
+					FieldAlias inject = field.getAnnotation(FieldAlias.class);
+					if (inject != null) {
+						String alias = inject.alias();
+						if (!alias.equals("")) {
+							field.set(t, rs.getObject(alias));
+						} else {
+							field.set(t, rs.getObject(field.getName()));
+						}
+					}
 				}
 				list.add(t);
 			}

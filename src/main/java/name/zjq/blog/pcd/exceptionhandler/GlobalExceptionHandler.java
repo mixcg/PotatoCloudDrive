@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class GlobalExceptionHandler {
 	private static final Log logger = LogFactory.getLog(GlobalExceptionHandler.class);
 
-	@ExceptionHandler(value = { CustomizeLogicException.class })
-	public void logicExceptionInterception(CustomizeLogicException ex, HttpServletResponse response) {
+	@ExceptionHandler(value = { CustomLogicException.class })
+	public void logicExceptionInterception(CustomLogicException ex, HttpServletResponse response) {
 		response.setContentType("text/plain;charset=UTF-8");
 		response.setStatus(ex.getHttpStatus());
 		try {

@@ -28,14 +28,9 @@
 	<!-- 配置拦截器 -->
 	<mvc:interceptors>
 		<mvc:interceptor>
-			<mvc:mapping path="/file/**" />
-			<bean class="name.zjq.blog.pcd.interceptor.LoginUserAuth" />
-		</mvc:interceptor>
-		<mvc:interceptor>
+			<mvc:mapping path="/files/**" />
 			<mvc:mapping path="/login/logout" />
-			<bean class="name.zjq.blog.pcd.interceptor.LoginUserAuth" />
-		</mvc:interceptor>
-		<mvc:interceptor>
+			<mvc:mapping path="/share/**" />
 			<mvc:mapping path="/play/**" />
 			<bean class="name.zjq.blog.pcd.interceptor.LoginUserAuth" />
 		</mvc:interceptor>

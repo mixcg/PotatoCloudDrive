@@ -13,12 +13,16 @@ var CustomAjax = {
 			url : url,
 			data : reqdata,
 			success : function(returndata) {
-				if(callbackFunc){
+				toastr.info(returndata.resultdesc);
+				if (callbackFunc) {
 					callbackFunc(returndata);
-				}
+				} 
 			},
 			error : function(jqXHR) {
 				toastr.error(jqXHR.responseText);
+				if(jqXHR.status == 401){
+					setTimeout("window.location.href = 'login.html'", 1000 )
+				}
 			}
 		});
 	}

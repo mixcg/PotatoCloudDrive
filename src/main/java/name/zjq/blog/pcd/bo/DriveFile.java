@@ -27,37 +27,37 @@ import name.zjq.blog.pcd.utils.Coder;
 public class DriveFile {
 	private static final Log logger = LogFactory.getLog(DriveFile.class);
 
-	private boolean isDir;// 是否是目录
-	private String fileType = "";// 文件类型
-	private String fileName;// 文件名称
+	private boolean isdir;// 是否是目录
+	private String filetype = "";// 文件类型
+	private String filename;// 文件名称
 	private String base64filepath;// base64编码文件地址
-	private long fileSize;// 文件大小(单位:bytes)
-	private String descSize;// 描述大小
-	private String lastModifiedTime;// 文件最后修改时间
+	private long filesize;// 文件大小(单位:bytes)
+	private String descsize;// 描述大小
+	private String lastmodifiedtime;// 文件最后修改时间
 
 	public DriveFile(String maindir, Path fileArg, BasicFileAttributes attrs) {
-		this.isDir = attrs.isDirectory();
-		this.fileName = fileArg.getFileName().toString();
-		if (this.isDir) {
-			this.fileType = "文件夹";
-			this.descSize = "";
+		this.isdir = attrs.isDirectory();
+		this.filename = fileArg.getFileName().toString();
+		if (this.isdir) {
+			this.filetype = "文件夹";
+			this.descsize = "";
 		} else {
-			if (fileName.lastIndexOf(".") > -1) {
-				this.fileType = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+			if (filename.lastIndexOf(".") > -1) {
+				this.filetype = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
 			}
-			this.descSize = calculateDescSize();
+			this.descsize = calculateDescSize();
 		}
-		this.fileSize = attrs.size();
+		this.filesize = attrs.size();
 		String filepath = fileArg.toAbsolutePath().toString().replace("\\", "/").replace(maindir, "");
 		this.base64filepath = Coder.encoderURLBASE64((filepath).getBytes());
-		this.lastModifiedTime = formatTime(attrs.lastModifiedTime().toMillis());
+		this.lastmodifiedtime = formatTime(attrs.lastModifiedTime().toMillis());
 	}
 
 	private String calculateDescSize() {
-		BigDecimal big1 = new BigDecimal(this.fileSize);
-		if (this.fileSize > 1073741824) {
+		BigDecimal big1 = new BigDecimal(this.filesize);
+		if (this.filesize > 1073741824) {
 			return big1.divide(new BigDecimal(1073741824), 2, BigDecimal.ROUND_HALF_EVEN).toString() + "GB";
-		} else if (this.fileSize > 1024 * 1024) {
+		} else if (this.filesize > 1024 * 1024) {
 			return big1.divide(new BigDecimal(1024 * 1024), 2, BigDecimal.ROUND_HALF_EVEN).toString() + "MB";
 		} else {
 			return big1.divide(new BigDecimal(1024), 2, BigDecimal.ROUND_HALF_EVEN).toString() + "KB";
@@ -65,23 +65,23 @@ public class DriveFile {
 	}
 
 	public boolean isDir() {
-		return isDir;
+		return isdir;
 	}
 
-	public String getFileType() {
-		return fileType;
+	public String getFiletype() {
+		return filetype;
 	}
 
-	public String getFileName() {
-		return fileName;
+	public String getFilename() {
+		return filename;
 	}
 
-	public String getDescSize() {
-		return descSize;
+	public String getDescsize() {
+		return descsize;
 	}
 
-	public String getLastModifiedTime() {
-		return lastModifiedTime;
+	public String getLastmodifiedtime() {
+		return lastmodifiedtime;
 	}
 
 	public String getBase64filepath() {

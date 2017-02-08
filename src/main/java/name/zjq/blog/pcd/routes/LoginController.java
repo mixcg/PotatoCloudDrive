@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import name.zjq.blog.pcd.bo.User;
 import name.zjq.blog.pcd.config.RSAEncrypt;
-import name.zjq.blog.pcd.exceptionhandler.CustomizeLogicException;
+import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
 import name.zjq.blog.pcd.interceptor.LoginUserAuth;
 import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
@@ -39,21 +39,20 @@ public class LoginController {
 	 */
 	@RequestMapping(method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public PR auth(HttpServletRequest request) throws CustomizeLogicException {
+	public PR auth(HttpServletRequest request) throws CustomLogicException {
 		String username = request.getParameter("username");
 		String password = request.getParameter("password");
 		if (StrUtil.isNullOrEmpty(username) || StrUtil.isNullOrEmpty(password)) {
-			throw new CustomizeLogicException(401, "参数非法【用户名或密码为空】", null);
+			throw new CustomLogicException(401, "参数非法【用户名或密码为空】", null);
 		}
 		username = RSAEncrypt.getInstance().decryptByPriKey(username);
 		password = RSAEncrypt.getInstance().decryptByPriKey(password);
 		User u = User.loginAuth(username, password);
 		if (u != null) {
 			String token = u.createToken(request);
-			return new PR(200, "登录成功", token);
+			return new PR("登录成功", token);
 		}
-		throw new CustomizeLogicException(401, "用户名或密码错误", null);
-		// return new PR(403, "用户名或密码错误", null);
+		throw new CustomLogicException(401, "用户名或密码错误", null);
 	}
 
 	/**
@@ -66,6 +65,6 @@ public class LoginController {
 	public PR logout(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		loginUser.setToken(null);
 		loginUser.setExpirationtime(-1);
-		return new PR(200, "ok", null);
+		return new PR("ok", null);
 	}
 }

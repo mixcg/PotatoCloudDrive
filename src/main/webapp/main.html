@@ -5,9 +5,9 @@
 <link href="css/bootstrap.css" rel="stylesheet">
 <link href="css/toastr.css" rel="stylesheet">
 <style type="text/css">
-.tablediv a{
+.tablediv a {
 	color: #000;
-	text-decoration:none
+	text-decoration: none
 }
 </style>
 </head>
@@ -21,16 +21,14 @@
 						<div class="navbar-header">
 							<a class="navbar-brand" href="javascipt:void(0)">PotatoCloudDrive</a>
 						</div>
-						<div class="collapse navbar-collapse"
-							id="bs-example-navbar-collapse-1">
+						<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 							<ul class="nav navbar-nav">
 								<li><a href="main.html">网盘</a></li>
 								<li><a href="#">传输</a></li>
 								<li><a href="javascipt:void(0)" onclick="loadShareList()">分享</a></li>
 							</ul>
 							<ul class="nav navbar-nav navbar-right">
-								<li class="dropdown"><a href="javascipt:void(0)"
-									class="dropdown-toggle" data-toggle="dropdown">管理员 <span
+								<li class="dropdown"><a href="javascipt:void(0)" class="dropdown-toggle" data-toggle="dropdown">管理员 <span
 										class="caret"></span></a>
 									<ul class="dropdown-menu" role="menu">
 										<li><a href="#">修改密码</a></li>
@@ -51,8 +49,7 @@
 				<ul class="nav nav-list" id="customNav" style="display: none">
 					<li class="nav-header">新建</li>
 					<li class="active"><a href="#">主页</a></li>
-					<li><a href="javascript:void(0)"
-						onclick="new FileOperate('createNewFile','','').doRequest()">新建文件</a></li>
+					<li><a href="javascript:void(0)" onclick="new FileOperate('createNewFile','','').doRequest()">新建文件</a></li>
 					<li><a href="javascript:void(0)">新建文件夹</a></li>
 					<li class="nav-header">上传</li>
 					<li><a href="#">上传文件</a></li>
@@ -62,10 +59,8 @@
 				</ul>
 				<ul class="nav nav-list" id="mainNav">
 					<li class="nav-header">新建</li>
-					<li><a href="javascript:void(0)"
-						onclick="new FileOperate('createNewFile','','').doRequest()">新建文件</a></li>
-					<li><a href="javascript:void(0)"
-						onclick="new FileOperate('createNewDir','','').doRequest()">新建文件夹</a></li>
+					<li><a href="javascript:void(0)" type="file" onclick="createNewFile(this)">新建文件</a></li>
+					<li><a href="javascript:void(0)" type="directory" onclick="createNewFile(this)">新建文件夹</a></li>
 					<li class="nav-header">上传</li>
 					<li><a href="#">上传文件</a></li>
 					<li><a href="#">上传文件夹</a></li>
@@ -77,14 +72,14 @@
 						<tr>
 							<th colspan="11">
 								<ol class="breadcrumb" id="dirul">
-									<li><a href='javascript:void(0)' path ='' onclick="BackDir(this)">主目录</a></li>
+									<li><a href='javascript:void(0)' path='' onclick="BackDir(this)">主目录</a></li>
 								</ol>
 							</th>
 						</tr>
 						<tr>
 							<th></th>
 							<th>文件名</th>
-							<th colspan="6"></th>
+							<th></th>
 							<th>文件类型</th>
 							<th>大小</th>
 							<th>最后修改时间</th>
@@ -92,33 +87,23 @@
 					</thead>
 					<tbody>
 						<tr>
+							<td><img src='img/folder.png' class='img-responsive' onerror='ImgError(this)'></td>
+							<td><a href='javascript:void(0)' onclick='EnterDir(this)' path=''></a></td>
 							<td>
-								<img src='img/folder.png' class='img-responsive' onerror='ImgError(this)'>
-							</td>
-							<td>
-								<a href='javascript:void(0)' onclick='EnterDir(this)' path=''></a>
-							</td>
-							<td colspan="6">
-								<div style='visibility:hidden;' class="tablediv">
-									&nbsp;&nbsp;&nbsp;&nbsp;
-									<a href='javascipt:void(0)' type='download' onclick='FileOperate(this)'>
-										<span  title='下载' class='glyphicon glyphicon-download-alt'>&nbsp;&nbsp;</span>
+								<div style='visibility: hidden;' class="tablediv">
+									<a href='javascipt:void(0)' type='download' onclick='FileOperate(this)'> <span title='下载'
+										class='glyphicon glyphicon-download-alt'>&nbsp;&nbsp;</span>
+									</a> <a href='javascipt:void(0)' type='play' onclick='FileOperate(this)'> <span title='播放'
+										class='glyphicon glyphicon-facetime-video'>&nbsp;&nbsp;</span>
+									</a> <a href='javascipt:void(0)' type='mv' onclick='FileOperate(this)'> <span title='移动'
+										class='glyphicon glyphicon-share-alt'>&nbsp;&nbsp;</span>
+									</a> <a href='javascipt:void(0)' type='rename' onclick='FileOperate(this)'> <span title='重命名'
+										class='glyphicon glyphicon-pencil'>&nbsp;&nbsp;</span>
+									</a> <a href='javascipt:void(0)' type='share' onclick='FileOperate(this)'> <span title='分享'
+										class='glyphicon glyphicon-send'>&nbsp;&nbsp;</span>
+									</a> <a href='javascipt:void(0)' type='del' onclick='FileOperate(this)'> <span title='删除'
+										class='glyphicon glyphicon-trash'>&nbsp;&nbsp;</span>
 									</a>
-									<a href='javascipt:void(0)' type='play' onclick='FileOperate(this)'>
-										<span  title='播放' class='glyphicon glyphicon-facetime-video'>&nbsp;&nbsp;</span>
-									</a>
-									<a href='javascipt:void(0)' type='mv' onclick='FileOperate(this)'>
-										<span title='移动' class='glyphicon glyphicon-share-alt'>&nbsp;&nbsp;</span>
-									</a>
-									<a href='javascipt:void(0)' type='rename' onclick='FileOperate(this)'>
-										<span title='重命名' class='glyphicon glyphicon-pencil'>&nbsp;&nbsp;</span>
-									</a>
-									<a href='javascipt:void(0)' type='share' onclick='FileOperate(this)'>
-										<span title='分享' class='glyphicon glyphicon-send'>&nbsp;&nbsp;</span>
-									</a>
-									<a href='javascipt:void(0)' type='del' onclick='FileOperate(this)'>
-										<span title='删除' class='glyphicon glyphicon-trash'>&nbsp;&nbsp;</span>
-									</a>&nbsp;&nbsp;&nbsp;&nbsp;
 								</div>
 							</td>
 							<td></td>
@@ -137,18 +122,72 @@
 						<tr>
 							<th></th>
 							<th>文件名</th>
-							<th colspan="6"></th>
 							<th>文件类型</th>
-							<th>大小</th>
-							<th>最后修改时间</th>
+							<th>分享时间</th>
+							<th>下载次数</th>
+							<th>操作</th>
 						</tr>
 					</thead>
 					<tbody>
-
+						<tr>
+							<td><img src='img/folder.png' class='img-responsive' onerror='ImgError(this)'></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td>
+								<div class="btn-group" role="group" aria-label="...">
+									<button type="button" class="btn btn-danger" onclick="cancelShare(this)">取消分享</button>
+									<button type="button" class="btn btn-primary">Middle</button>
+									<button type="button" class="btn btn-primary">Right</button>
+								</div>
+							</td>
+						</tr>
 					</tbody>
 				</table>
 			</div>
 
+		</div>
+	</div>
+
+	<!-- 对话框 -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title">新建文件（夹）</h4>
+				</div>
+				<div class="modal-body">
+					<div class='row' type="singleRowInput">
+						<div class='col-md-12'>
+							<label for='labelname'>文件（夹）名称</label> <input type='text' class='form-control' required='required' />
+						</div>
+					</div>
+					<div class='row' type="deltip">
+						<div class='col-md-12'>你确定删除此文件（夹）吗？</div>
+					</div>
+					<div class='row' type="shareDiv">
+						<div class='col-md-1'></div>
+						<div class='col-md-10'>
+							<div class="form-group">
+								<label for="sharelink">分享链接</label> <input type="text" class="form-control" id="sharelink"
+									onclick="this.select()">
+							</div>
+							<div class="form-group">
+								<label for="sharepwd">访问密码</label> <input type="text" class="form-control" id="sharepwd">
+							</div>
+						</div>
+						<div class='col-md-1'></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+					<button type="button" class="btn btn-primary" id="modalSubmit">确定</button>
+				</div>
+			</div>
 		</div>
 	</div>
 </body>
@@ -157,7 +196,6 @@
 <script src="js/bootstrap.min.js"></script>
 <script src="js/toastr.js"></script>
 <script src="js/prettify.js"></script>
-<script src="js/jquery.confirm.min.js"></script>
 <script src="js/base64.min.js"></script>
 <script src="control/CustomAjax.js"></script>
 <script src="control/cookie.js"></script>

@@ -75,13 +75,14 @@ public class User {
 	 */
 	public synchronized String createToken(HttpServletRequest request) {
 		if (StrUtil.isNullOrEmpty(token)) {
-			uuid = StrUtil.getUUID();
-			RequestAgent ra = new RequestAgent(request);
-			String token = new StringBuilder().append(username).append(ra.getIp()).append(ra.getBrowserName()).append(ra.getOsName()).append(uuid).toString();
-			int x = (int) (Math.random() * 100);
-			this.token = Coder.MD5(token, x);
-			md5times = x;
+			userlist.remove(token);
 		}
+		uuid = StrUtil.getUUID();
+		RequestAgent ra = new RequestAgent(request);
+		String token = new StringBuilder().append(username).append(ra.getIp()).append(ra.getBrowserName()).append(ra.getOsName()).append(uuid).toString();
+		int x = (int) (Math.random() * 100);
+		this.token = Coder.MD5(token, x);
+		md5times = x;
 		this.expirationtime = new Date().getTime() + 30 * 60 * 1000;
 		userlist.put(token, this);
 		return token;
