@@ -34,7 +34,7 @@ public class ShareController {
 		if (StrUtil.isNullOrEmpty(path)) {
 			throw new CustomLogicException(400, "参数为空", null);
 		} else {
-			path = new String(Coder.decoderBASE64(path), "UTF-8");
+			path = new String(Coder.decoderURLBASE64(path), "UTF-8");
 			FileShare f = new FileShare(loginUser, path);
 			if (f.addNewShare()) {
 				return new PR("文件分享成功", f);
@@ -65,6 +65,7 @@ public class ShareController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = "application/json")
+	@ResponseBody
 	public PR cancelShare(@PathVariable String id, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
 		if (FileShare.cancelShare(id, loginUser.getUsername())) {
 			return new PR("取消分享成功", null);

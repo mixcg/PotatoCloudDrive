@@ -17,9 +17,9 @@ public class FileShare {
 	@FieldAlias
 	private String owner;// 所有者
 	@FieldAlias
-	private String filename = "";// 文件名称
+	private String filename;// 文件名称
 	@FieldAlias
-	private String filetype;// 文件类型
+	private String filetype = "";// 文件类型
 	@FieldAlias
 	private String password;// 分享密码
 	@FieldAlias

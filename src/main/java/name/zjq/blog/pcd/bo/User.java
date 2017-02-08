@@ -16,7 +16,7 @@ import name.zjq.blog.pcd.utils.StrUtil;
 
 public class User {
 	private static final Log logger = LogFactory.getLog(User.class);
-	private static final Properties prop = new Properties();
+	public static final Properties prop = new Properties();
 	private static boolean initFlag = false;
 	private static Map<String, User> userlist = new HashMap<String, User>();
 
@@ -31,7 +31,7 @@ public class User {
 				logger.error("配置文件加载异常！", e);
 				System.exit(1);
 			}
-			String usersplit = prop.getProperty("USERLIST");
+			String usersplit = prop.getProperty("userlist");
 			if (StrUtil.isNullOrEmpty(usersplit)) {
 				logger.error("配置文件配置有误，请检查");
 				System.exit(1);
@@ -49,6 +49,15 @@ public class User {
 			}
 			initFlag = true;
 		}
+	}
+
+	public static String getDBPath() {
+		String dbPath = prop.getProperty("database");
+		if (dbPath == null || !dbPath.endsWith(".db")) {
+			logger.error("数据库配置有误，请检查");
+			System.exit(1);
+		}
+		return prop.getProperty("database");
 	}
 
 	/**
@@ -74,14 +83,15 @@ public class User {
 	 * @return
 	 */
 	public synchronized String createToken(HttpServletRequest request) {
-		if (StrUtil.isNullOrEmpty(token)) {
+		if (userlist.containsKey(token)) {
 			userlist.remove(token);
 		}
 		uuid = StrUtil.getUUID();
 		RequestAgent ra = new RequestAgent(request);
-		String token = new StringBuilder().append(username).append(ra.getIp()).append(ra.getBrowserName()).append(ra.getOsName()).append(uuid).toString();
+		String cilentinfo = new StringBuilder().append(username).append(ra.getIp()).append(ra.getBrowserName())
+				.append(ra.getOsName()).append(uuid).toString();
 		int x = (int) (Math.random() * 100);
-		this.token = Coder.MD5(token, x);
+		token = Coder.MD5(cilentinfo, x);
 		md5times = x;
 		this.expirationtime = new Date().getTime() + 30 * 60 * 1000;
 		userlist.put(token, this);
@@ -102,7 +112,8 @@ public class User {
 				return null;
 			}
 			RequestAgent ra = new RequestAgent(request);
-			String token = new StringBuilder().append(u.username).append(ra.getIp()).append(ra.getBrowserName()).append(ra.getOsName()).append(u.uuid).toString();
+			String token = new StringBuilder().append(u.username).append(ra.getIp()).append(ra.getBrowserName())
+					.append(ra.getOsName()).append(u.uuid).toString();
 			return Coder.MD5(token, u.md5times).equals(_token) ? u : null;
 		}
 		return null;

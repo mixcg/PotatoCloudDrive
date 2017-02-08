@@ -18,6 +18,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import name.zjq.blog.pcd.bo.FileShare;
+import name.zjq.blog.pcd.bo.User;
 
 public class DBConnection {
 	private static final Log logger = LogFactory.getLog(DBConnection.class);
@@ -26,8 +27,7 @@ public class DBConnection {
 	private static String path;
 
 	public static void init() {
-		path = DBConnection.class.getClassLoader().getResource("").getPath();
-		Path file = Paths.get(path.replaceFirst("/", ""), "pcd.db");
+		Path file = Paths.get(User.getDBPath());
 		path = file.toAbsolutePath().toString();
 		boolean flag = Files.exists(file, new LinkOption[] { LinkOption.NOFOLLOW_LINKS });
 		if (!flag) {
