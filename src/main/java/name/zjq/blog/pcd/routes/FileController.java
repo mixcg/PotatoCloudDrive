@@ -1,7 +1,15 @@
 package name.zjq.blog.pcd.routes;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 import name.zjq.blog.pcd.bo.DriveFile;
 import name.zjq.blog.pcd.bo.User;
@@ -165,5 +176,44 @@ public class FileController {
 		} else {
 			throw new CustomLogicException(500, "新建文件（文件夹）失败", null);
 		}
+	}
+
+	/**
+	 * 文件上传
+	 * 
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(method = RequestMethod.POST)
+	@ResponseBody
+	public PR fileUpload(HttpServletRequest request, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser)
+			throws Exception {
+		request.setCharacterEncoding("UTF-8");
+		Path uploadDir = Paths.get(loginUser.getDirectory(), "uploads");
+		boolean uploadDirExists = Files.exists(uploadDir, new LinkOption[] { LinkOption.NOFOLLOW_LINKS });
+		if (!uploadDirExists) {
+			Files.createDirectory(uploadDir);
+		}
+		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(
+				request.getSession().getServletContext());
+		if (multipartResolver.isMultipart(request)) {
+			MultipartHttpServletRequest multiRequest = (MultipartHttpServletRequest) request;
+			Iterator<String> iter = multiRequest.getFileNames();
+
+			while (iter.hasNext()) {
+				MultipartFile file = multiRequest.getFile(iter.next().toString());
+				if (file != null) {
+					Path filepath = Paths.get(uploadDir.toAbsolutePath().toString(),
+							new String(file.getOriginalFilename().getBytes("ISO-8859-1"), "UTF-8"));
+					boolean fileExists = Files.exists(filepath);
+					if (!fileExists) {
+						file.transferTo(filepath.toFile());
+					}
+				}
+			}
+			return new PR("上传成功", null);
+		}
+		throw new CustomLogicException(400, "请求错误", null);
 	}
 }

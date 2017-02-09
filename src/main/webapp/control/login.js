@@ -5,7 +5,7 @@ function loginAuth(data) {
 		username : uname,
 		password : pwd
 	};
-	CustomAjax.ajaxRequest("api/login/auth", "POST", reqdata, loginSuccess);
+	CustomAjax.ajaxRequest("api/login", "POST", reqdata, loginSuccess);
 }
 function loginSuccess(data) {
 	if (data) {
@@ -24,5 +24,5 @@ $("#loginButton").click(function() {
 		toastr.error($("#password").attr('placeholder'));
 		return;
 	}
-	CustomAjax.ajaxRequest("api/login/auth", "GET", null, loginAuth);
+	CustomAjax.ajaxRequest("api/login", "GET", null, loginAuth);
 });

@@ -1,5 +1,6 @@
 package name.zjq.blog.pcd.bo;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -9,6 +10,7 @@ import java.util.List;
 
 import name.zjq.blog.pcd.config.DBConnection;
 import name.zjq.blog.pcd.config.FieldAlias;
+import name.zjq.blog.pcd.utils.Coder;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 public class FileShare {
@@ -29,7 +31,9 @@ public class FileShare {
 	@FieldAlias
 	private int downloadtimes;// 下载次数
 
-	public FileShare(User loginUser, String filepath) {
+	public FileShare(User loginUser, String filepath) throws UnsupportedEncodingException {
+		this.filepath = filepath;
+		filepath = new String(Coder.decoderURLBASE64(filepath), "UTF-8");
 		this.id = StrUtil.getUUID();
 		this.sharedate = new Date().getTime();
 		Path file = Paths.get(loginUser.getDirectory(), filepath);
@@ -43,7 +47,6 @@ public class FileShare {
 		}
 		this.owner = loginUser.getUsername();
 		generatePassword();
-		this.filepath = filepath;
 	}
 
 	public FileShare() {

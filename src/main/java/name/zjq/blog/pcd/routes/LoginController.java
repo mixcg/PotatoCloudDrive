@@ -16,7 +16,7 @@ import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 @Controller
-@RequestMapping("/login/auth")
+@RequestMapping("/login")
 public class LoginController {
 
 	/**
@@ -60,7 +60,7 @@ public class LoginController {
 	 * 
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.DELETE, produces = "application/json")
+	@RequestMapping(value = "/logout", method = RequestMethod.DELETE, produces = "application/json")
 	@ResponseBody
 	public PR logout(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
 		loginUser.setToken(null);

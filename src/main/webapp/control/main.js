@@ -5,19 +5,47 @@ var token = new Object();
 var fileListTRDefault = null;
 
 $(function() {
+	sessionStorage.clear();
+	sessionStorage.setItem("uploadArray", new Array());
+	setInterval("refTransList()", 1000);
 	token.pcdtoken = CookieUtil.getCookie("pcdtoken");
-	ReqFileList("");
+	ReqFileList();
 	$('#myModal').on('show.bs.modal', function(e) {
 		$("#myModal div[class='row']").each(function() {
 			$(this).addClass("hidden");
 		});
 	})
+	$('#myModal').on('hidden.bs.modal', function(e) {
+		$("#modalSubmit").removeClass("copy");
+		$("#modalSubmit").unbind();
+		$("#modalSubmit").text("确定");
+	})
 });
+// 传输列表刷新
+function refTransList() {
+	var uploadArray = sessionStorage.getItem("uploadArray");
+	if (uploadArray) {
+		uploadArray = JSON.parse(uploadArray);
+		$(".badge").text(uploadArray.length);
+		for (var i = 0; i < uploadArray.length; i++) {
+			var filename = uploadArray[i];
+			console.log(filename + " " +sessionStorage.getItem(filename));
+		}
+	}
+}
+
+function loadDrive() {
+	$("#wangpan").show();
+	$("#transportlist").hide();
+	$("#sharelist").hide();
+	ReqFileList();
+}
 // 请求文件列表
 function ReqFileList(filepath) {
 	if (!filepath) {
 		filepath = "api/files"
 		CustomAjax.ajaxRequest(filepath, "GET", token, loadFileList);
+		$("#dirul li:gt(0)").remove();
 	} else {
 		filepath = "api/files/" + filepath;
 		CustomAjax.ajaxRequest(filepath, "GET", token, loadFileList);
@@ -81,7 +109,6 @@ function createNewFile(label) {
 	singleRowInput.find("input").val("");
 	$("#myModal").modal();
 	singleRowInput.removeClass("hidden");
-	$("#modalSubmit").unbind();
 	$("#modalSubmit").on(
 			'click',
 			function() {
@@ -122,7 +149,6 @@ function FileOperate(label) {
 		var deltip = $("#myModal div[type='deltip']");
 		$("#myModal").modal();
 		deltip.removeClass("hidden");
-		$("#modalSubmit").unbind();
 		$("#modalSubmit").on('click', function() {
 			CustomAjax.ajaxRequest("api/files/" + path, "DELETE", token, refreshThisDir);
 		});
@@ -137,7 +163,6 @@ function FileOperate(label) {
 		singleRowInput.find("input").val("");
 		$("#myModal").modal();
 		singleRowInput.removeClass("hidden");
-		$("#modalSubmit").unbind();
 		$("#modalSubmit").on('click', function() {
 			var newfilename = singleRowInput.find("input").val();
 			newfilename = Base64.encodeURI(newfilename);
@@ -157,9 +182,58 @@ function shareSuccess(data) {
 	$("#sharelink").val(getRootPath() + sharefile.id);
 	$("#sharepwd").val(sharefile.password);
 
+	$("#modalSubmit").text("复制");
+	$("#modalSubmit").addClass("copy");
+	new Clipboard('.copy', {
+		text : function(trigger) {
+			// TODO finish copy
+			toastr.info("复制到剪切板成功！");
+			return "aaaaa";
+		}
+	});
 	var shareDiv = $("#myModal div[type='shareDiv']");
 	$("#myModal").modal();
 	shareDiv.removeClass("hidden");
+}
+// 上传文件
+function uploadFile() {
+	$("#file_upload").unbind();
+	$("#file_upload").change(function() {
+		var file = this.files[0];
+		var xhr = new XMLHttpRequest();
+		var fd = new FormData();
+		fd.append("fileName", file);
+		// 监听事件
+		xhr.upload.addEventListener("progress", function(evt) {
+			if (evt.lengthComputable) {
+				// evt.loaded：文件上传的大小 evt.total：文件总的大小
+				var percentComplete = Math.round((evt.loaded) * 100 / evt.total);
+				sessionStorage.setItem(file.name, percentComplete);
+			}
+		}, false);
+		// 发送文件和表单自定义参数
+		xhr.open("POST", "api/files", true);
+		xhr.send(fd);
+		if (file) {
+			var uploadArray = sessionStorage.getItem("uploadArray");
+			if (!uploadArray) {
+				uploadArray = new Array();
+			} else {
+				uploadArray = JSON.parse(uploadArray);
+			}
+			uploadArray.push(file.name);
+			sessionStorage.setItem("uploadArray", JSON.stringify(uploadArray));
+		}
+	})
+	$("#file_upload").trigger('click');
+}
+/**
+ * 传输列表
+ */
+function loadTransport(){
+	$("#wangpan").hide();
+	$("#transportlist").show();
+	$("#sharelist").hide();
 }
 
 /**
@@ -168,8 +242,19 @@ function shareSuccess(data) {
 var shareListTRDefault = null;
 function loadShareList() {
 	$("#wangpan").hide();
+	$("#transportlist").hide();
 	$("#sharelist").show();
 	CustomAjax.ajaxRequest("api/share", "GET", token, loadShareFileList);
+	new Clipboard('.copy').destroy();
+	new Clipboard('.copy', {
+		text : function(trigger) {
+			var tr = $(trigger).parents("tr");
+			var id = tr.attr("id");
+			var password = tr.attr("password");
+			toastr.info("复制到剪切板成功！");
+			return id + password;
+		}
+	});
 }
 // 加载分享列表
 function loadShareFileList(data) {
@@ -189,6 +274,8 @@ function loadShareFileList(data) {
 		tmptr.find("td").eq(3).html(tmpdata.sharedate);
 		tmptr.find("td").eq(4).html(tmpdata.downloadtimes);
 		tmptr.attr("id", tmpdata.id);
+		tmptr.attr("password", tmpdata.password);
+		tmptr.attr("filepath", tmpdata.filepath);
 		$('#sharefiletable tbody').append(tmptr);
 	}
 }
@@ -197,14 +284,20 @@ function cancelShare(label) {
 	var id = $(label).parents("tr").attr("id");
 	CustomAjax.ajaxRequest("api/share/" + id, "DELETE", token, cancelShareSuccess);
 }
-function cancelShareSuccess(data){
+function cancelShareSuccess(data) {
 	CustomAjax.ajaxRequest("api/share", "GET", token, loadShareFileList);
 }
+// // 查看分享
+// function watchShareFile(label) {
+// var filepath = $(label).parents("tr").attr("filepath");
+// window.location.href = "main.html#" + filepath;
+// location.reload();
+// }
 /**
  * 退出登录----------------------------
  */
 function logout() {
-	CustomAjax.ajaxRequest("api/login/auth", "DELETE", token, logoutSuccess);
+	CustomAjax.ajaxRequest("api/login/logout", "DELETE", token, logoutSuccess);
 }
 function logoutSuccess() {
 	CookieUtil.delCookie("pcdtoken");
@@ -227,3 +320,12 @@ function getRootPath() {
 	var projectName = pathName.substring(0, pathName.substr(1).indexOf('/') + 1);
 	return (localhostPaht + projectName);
 }
+// // 获取#后面的值
+// function getUrlParam() {
+// var curWwwPath = window.document.location.href;
+// var arg = curWwwPath.split("#");
+// if (arg.length > 1) {
+// return arg[1];
+// }
+// return "";
+// }

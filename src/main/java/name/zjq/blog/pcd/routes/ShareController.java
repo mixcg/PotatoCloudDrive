@@ -34,7 +34,6 @@ public class ShareController {
 		if (StrUtil.isNullOrEmpty(path)) {
 			throw new CustomLogicException(400, "参数为空", null);
 		} else {
-			path = new String(Coder.decoderURLBASE64(path), "UTF-8");
 			FileShare f = new FileShare(loginUser, path);
 			if (f.addNewShare()) {
 				return new PR("文件分享成功", f);
