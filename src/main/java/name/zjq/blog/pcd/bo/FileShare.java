@@ -8,8 +8,8 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 
-import name.zjq.blog.pcd.config.DBConnection;
-import name.zjq.blog.pcd.config.FieldAlias;
+import name.zjq.blog.pcd.db.DBConnection;
+import name.zjq.blog.pcd.db.FieldAlias;
 import name.zjq.blog.pcd.utils.Coder;
 import name.zjq.blog.pcd.utils.StrUtil;
 

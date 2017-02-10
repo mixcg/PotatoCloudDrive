@@ -3,61 +3,18 @@ package name.zjq.blog.pcd.bo;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import name.zjq.blog.pcd.utils.Coder;
 import name.zjq.blog.pcd.utils.RequestAgent;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 public class User {
-	private static final Log logger = LogFactory.getLog(User.class);
-	public static final Properties prop = new Properties();
-	private static boolean initFlag = false;
 	private static Map<String, User> userlist = new HashMap<String, User>();
 
-	/**
-	 * 初始化配置文件
-	 */
-	public static void init() {
-		if (!initFlag) {
-			try {
-				prop.load(User.class.getResourceAsStream("/config.properties"));
-			} catch (Exception e) {
-				logger.error("配置文件加载异常！", e);
-				System.exit(1);
-			}
-			String usersplit = prop.getProperty("userlist");
-			if (StrUtil.isNullOrEmpty(usersplit)) {
-				logger.error("配置文件配置有误，请检查");
-				System.exit(1);
-			}
-			String[] usernames = usersplit.split(",");
-			for (String username : usernames) {
-				String password = prop.getProperty(String.format("%s_password", username));
-				String directory = prop.getProperty(String.format("%s_directory", username));
-				if (password == null || directory == null) {
-					logger.error("配置文件配置有误，请检查");
-					System.exit(1);
-				}
-				directory = directory.replace("\\", "/");
-				userlist.put(username, new User(username, password, directory));
-			}
-			initFlag = true;
-		}
-	}
-
-	public static String getDBPath() {
-		String dbPath = prop.getProperty("database");
-		if (dbPath == null || !dbPath.endsWith(".db")) {
-			logger.error("数据库配置有误，请检查");
-			System.exit(1);
-		}
-		return prop.getProperty("database");
+	public static void addConfigUser(String username, String password, String directory) {
+		userlist.put(username, new User(username, password, directory));
 	}
 
 	/**

@@ -1,4 +1,4 @@
-package name.zjq.blog.pcd.config;
+package name.zjq.blog.pcd.db;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -18,7 +18,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import name.zjq.blog.pcd.bo.FileShare;
-import name.zjq.blog.pcd.bo.User;
 
 public class DBConnection {
 	private static final Log logger = LogFactory.getLog(DBConnection.class);
@@ -26,8 +25,8 @@ public class DBConnection {
 
 	private static String path;
 
-	public static void init() {
-		Path file = Paths.get(User.getDBPath());
+	public static void initDB(String dbpath) {
+		Path file = Paths.get(dbpath);
 		path = file.toAbsolutePath().toString();
 		boolean flag = Files.exists(file, new LinkOption[] { LinkOption.NOFOLLOW_LINKS });
 		if (!flag) {

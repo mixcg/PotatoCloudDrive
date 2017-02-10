@@ -1,11 +1,6 @@
-package name.zjq.blog.pcd.config;
+package name.zjq.blog.pcd;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -28,14 +23,9 @@ public class RSAEncrypt {
 	private final String KEY_ALGORITHM = "RSA";
 	private byte[] pubKey;// 公钥
 	private byte[] priKey;// 私钥
-	private String keyFilePath;// 密钥文件
 
 	private RSAEncrypt() {
-		keyFilePath = Thread.currentThread().getContextClassLoader().getResource("").getPath() + "rsakeypair";
-		if (!getKeyFromFile()) {
-			initKeyPair();
-			writeKeyFile();
-		}
+		initKeyPair();
 	}
 
 	/**
@@ -50,38 +40,6 @@ public class RSAEncrypt {
 			logger.error(e);
 		}
 		return null;
-	}
-
-	/**
-	 * 从密钥文件中获取密钥对
-	 * 
-	 * @return
-	 */
-	public boolean getKeyFromFile() {
-		File file = new File(keyFilePath);
-		if (file.exists() && file.isFile()) {
-			try {
-				Reader reader = new InputStreamReader(new FileInputStream(file));
-				int tempchar;
-				StringBuilder sb = new StringBuilder();
-				while ((tempchar = reader.read()) != -1) {
-					if (((char) tempchar) != '\r') {
-						sb.append((char) tempchar);
-					}
-				}
-				reader.close();
-				String s = sb.toString().replace(" ", "");
-				if (!"".equals(s) && s.indexOf(",") > -1) {
-					pubKey = Coder.decoderBASE64(s.split(",")[0]);
-					priKey = Coder.decoderBASE64(s.split(",")[1]);
-					return checkKey();
-				}
-			} catch (Exception e) {
-
-			}
-		}
-		logger.info("密钥文件不存在，重新生成密钥文件");
-		return false;
 	}
 
 	/**
@@ -104,26 +62,6 @@ public class RSAEncrypt {
 		} catch (Exception e) {
 			logger.error("初始化密钥异常！", e);
 			System.exit(1);
-		}
-	}
-
-	/**
-	 * 将密钥写入文件
-	 */
-	private void writeKeyFile() {
-		try {
-			File file = new File(keyFilePath);
-			if (file.exists()) {
-				file.delete();
-			} else {
-				file.createNewFile();
-			}
-			FileWriter fw = new FileWriter(file);
-			fw.write(Coder.encoderBASE64(this.pubKey) + "," + Coder.encoderBASE64(this.priKey));
-			fw.flush();
-			fw.close();
-		} catch (Exception e) {
-			logger.error("密钥写入文件异常！", e);
 		}
 	}
 
@@ -213,15 +151,6 @@ public class RSAEncrypt {
 			logger.error("私钥解密异常!", e);
 		}
 		return null;
-	}
-
-	/**
-	 * 检测密钥对是否合法
-	 * 
-	 * @return
-	 */
-	private boolean checkKey() {
-		return "123456".equals(decryptByPriKey(encryptByPubKey("123456")));
 	}
 
 	private static RSAEncrypt encrypt = null;

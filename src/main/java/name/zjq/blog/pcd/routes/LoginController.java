@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import name.zjq.blog.pcd.RSAEncrypt;
 import name.zjq.blog.pcd.bo.User;
-import name.zjq.blog.pcd.config.RSAEncrypt;
 import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
 import name.zjq.blog.pcd.interceptor.LoginUserAuth;
 import name.zjq.blog.pcd.utils.PR;

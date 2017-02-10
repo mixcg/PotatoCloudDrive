@@ -1,4 +1,4 @@
-package name.zjq.blog.pcd.config;
+package name.zjq.blog.pcd.db;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
