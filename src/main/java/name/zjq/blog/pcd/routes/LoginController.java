@@ -26,8 +26,8 @@ public class LoginController {
 	 */
 	@RequestMapping(method = RequestMethod.GET)
 	@ResponseBody
-	public String getpubkey() {
-		return RSAEncrypt.getInstance().getPubKey();
+	public PR getpubkey() {
+		return new PR("", RSAEncrypt.getInstance().getPubKey());
 	}
 
 	/**

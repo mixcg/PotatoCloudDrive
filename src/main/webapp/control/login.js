@@ -1,28 +1,35 @@
-function loginAuth(data) {
-	var uname = RSAEncrypt.encrypt(data, $("#username").val());
-	var pwd = RSAEncrypt.encrypt(data, $("#password").val());
-	var reqdata = {
-		username : uname,
-		password : pwd
-	};
-	CustomAjax.ajaxRequest("api/login", "POST", reqdata, loginSuccess);
-}
-function loginSuccess(data) {
-	if (data) {
-		CookieUtil.delCookie("pcdtoken");
-		CookieUtil.setCookie("pcdtoken", data.result);
-		window.location.href = "main.html";
-	}
-}
+var app = angular.module('loginFormApp', []);
 
-$("#loginButton").click(function() {
-	if (!$("#username").val()) {
-		toastr.error($("#username").attr('placeholder'));
-		return;
+var postCfg = {
+	headers : {
+		'Content-Type' : 'application/x-www-form-urlencoded'
+	},
+	transformRequest : function(data) {
+		return $.param(data);
 	}
-	if (!$("#password").val()) {
-		toastr.error($("#password").attr('placeholder'));
-		return;
+};
+app.controller("login", function($scope, $http) {
+	$scope.loginAuth = function() {
+		var requrl = "api/login";
+		$http.get(requrl, null).then(function success(response) {
+			if (response) {
+				var data = {};
+				data.username = RSAEncrypt.encrypt(response.data.result, $scope.username);
+				data.password = RSAEncrypt.encrypt(response.data.result, $scope.password);
+				$http.post(requrl, data, postCfg).then(function success(response) {
+					if (response) {
+						CookieUtil.delCookie("pcdtoken");
+						CookieUtil.setCookie("pcdtoken", response.data.result);
+						window.location.href = "main.html";
+					}
+				}, function error(response) {
+					toastr.error(response.data);
+				});
+			} else {
+				toastr.error("啊哦，出错了！");
+			}
+		}, function error(response) {
+			toastr.error("啊哦，出错了！");
+		});
 	}
-	CustomAjax.ajaxRequest("api/login", "GET", null, loginAuth);
 });

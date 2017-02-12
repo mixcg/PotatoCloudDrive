@@ -20,6 +20,7 @@ import name.zjq.blog.pcd.utils.Coder;
 public class RSAEncrypt {
 	private final Log logger = LogFactory.getLog(RSAEncrypt.class);
 
+	private static String pk = null;
 	private final String KEY_ALGORITHM = "RSA";
 	private byte[] pubKey;// 公钥
 	private byte[] priKey;// 私钥
@@ -34,8 +35,12 @@ public class RSAEncrypt {
 	 * @return
 	 */
 	public String getPubKey() {
+		if (pk != null) {
+			return pk;
+		}
 		try {
-			return Coder.encoderBASE64(pubKey);
+			pk = Coder.encoderBASE64(pubKey);
+			return pk;
 		} catch (Exception e) {
 			logger.error(e);
 		}

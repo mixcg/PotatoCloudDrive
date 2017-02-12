@@ -16,8 +16,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,32 +27,38 @@ import org.apache.commons.logging.LogFactory;
 import name.zjq.blog.pcd.utils.Coder;
 
 public class DriveFile {
-	private static final Log logger = LogFactory.getLog(DriveFile.class);
-
-	private boolean isdir;// 是否是目录
+	private static final Log LOGGER = LogFactory.getLog(DriveFile.class);
+	private static final Set<String> CAN_PLAY_FILE_TYPE = new HashSet<String>();
+	static {
+		CAN_PLAY_FILE_TYPE.add("mp4");
+	}
+	private boolean isdir = false;// 是否是目录
 	private String filetype = "";// 文件类型
 	private String filename;// 文件名称
 	private String base64filepath;// base64编码文件地址
 	private long filesize;// 文件大小(单位:bytes)
-	private String descsize;// 描述大小
+	private String descsize = "";// 描述大小
 	private String lastmodifiedtime;// 文件最后修改时间
+	private boolean isplayonline = false;// 是否支持在线播放
 
 	public DriveFile(String maindir, Path fileArg, BasicFileAttributes attrs) {
-		this.isdir = attrs.isDirectory();
-		this.filename = fileArg.getFileName().toString();
-		if (this.isdir) {
-			this.filetype = "文件夹";
-			this.descsize = "";
+		isdir = attrs.isDirectory();
+		filename = fileArg.getFileName().toString();
+		if (isdir) {
+			filetype = "folder";
 		} else {
 			if (filename.lastIndexOf(".") > -1) {
-				this.filetype = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+				filetype = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
 			}
-			this.descsize = calculateDescSize();
+			if (CAN_PLAY_FILE_TYPE.contains(filetype)) {
+				isplayonline = true;
+			}
+			descsize = calculateDescSize();
 		}
-		this.filesize = attrs.size();
+		filesize = attrs.size();
 		String filepath = fileArg.toAbsolutePath().toString().replace("\\", "/").replace(maindir, "");
-		this.base64filepath = Coder.encoderURLBASE64((filepath).getBytes());
-		this.lastmodifiedtime = formatTime(attrs.lastModifiedTime().toMillis());
+		base64filepath = Coder.encoderURLBASE64((filepath).getBytes());
+		lastmodifiedtime = formatTime(attrs.lastModifiedTime().toMillis());
 	}
 
 	private String calculateDescSize() {
@@ -88,9 +96,17 @@ public class DriveFile {
 		return base64filepath;
 	}
 
+	public boolean getIsplayonline() {
+		return isplayonline;
+	}
+
 	private static String formatTime(long time) {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return formatter.format(new Date(time));
+	}
+
+	public static boolean checkIsCanPlayOnline(String filetype) {
+		return CAN_PLAY_FILE_TYPE.contains(filetype);
 	}
 
 	/**
@@ -117,7 +133,7 @@ public class DriveFile {
 				}
 			});
 		} catch (IOException e) {
-			logger.error(e);
+			LOGGER.error(e);
 		}
 		dirlsit.addAll(filelsit);
 		return dirlsit;
@@ -151,7 +167,7 @@ public class DriveFile {
 					}
 				});
 			} catch (IOException e) {
-				logger.error(e);
+				LOGGER.error(e);
 				return false;
 			}
 			return true;
@@ -184,7 +200,7 @@ public class DriveFile {
 				Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
 				return true;
 			} catch (IOException e) {
-				logger.error(e);
+				LOGGER.error(e);
 				return false;
 			}
 		}
@@ -209,7 +225,7 @@ public class DriveFile {
 			try {
 				Files.createFile(source);
 			} catch (IOException e) {
-				logger.error(e);
+				LOGGER.error(e);
 				return false;
 			}
 			return true;
@@ -234,7 +250,7 @@ public class DriveFile {
 			try {
 				Files.createDirectory(source);
 			} catch (IOException e) {
-				logger.error(e);
+				LOGGER.error(e);
 				return false;
 			}
 			return true;

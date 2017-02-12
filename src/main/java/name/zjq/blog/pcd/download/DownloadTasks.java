@@ -19,7 +19,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import name.zjq.blog.pcd.bo.DriveFile;
 import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
 import name.zjq.blog.pcd.utils.StrUtil;
 

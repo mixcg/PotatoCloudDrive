@@ -12,16 +12,16 @@
 		<div class="col-md-5"></div>
 		<div class="col-md-2">
 			<img alt="" src="img/cloud.png" class="img-responsive center-block">
-			<form role="form">
+			<form role="form" ng-app="loginFormApp" ng-controller="login" ng-submit="loginAuth()">
 				<div class="form-group">
 					<label for="username">用户名</label> <input type="text"
-						class="form-control" id="username" placeholder="请输入用户名">
+						class="form-control" placeholder="请输入用户名" ng-model="username" required>
 				</div>
 				<div class="form-group">
 					<label for="password">密码</label> <input type="password"
-						class="form-control" id="password" placeholder="请输入密码">
+						class="form-control" placeholder="请输入密码" ng-model="password" required>
 				</div>
-				<button type="button" class="btn btn-primary" id="loginButton">登录</button>
+				<button type="submit" class="btn btn-primary">登录</button>
 			</form>
 		</div>
 		<div class="col-md-5"></div>
@@ -31,8 +31,8 @@
 <script src="js/bootstrap.min.js"></script>
 <script src="js/toastr.js"></script>
 <script src="js/jsencrypt.min.js"></script>
+<script src="js/angular.min.js"></script>
 <script src="control/RSAEncrypt.js"></script>
-<script src="control/CustomAjax.js"></script>
 <script src="control/cookie.js"></script>
 <script src="control/login.js"></script>
 </html>
