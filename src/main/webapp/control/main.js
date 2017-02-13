@@ -139,6 +139,14 @@ app.controller("filelist", function ($scope, $http) {
 		$scope.FileModal = modal;
 		$("#FileModal").modal();
 	}
+	// 离线下载
+	$scope.addDownloadTask = function () {
+		var modal = {};
+		modal.title = "离线下载：";
+		modal.type = "download";
+		$scope.FileModal = modal;
+		$("#FileModal").modal();
+	}
 	// 文件分享Modal
 	$scope.shareFileModal = function () {
 		// TODO 完善链接
@@ -166,6 +174,9 @@ app.controller("filelist", function ($scope, $http) {
 	$scope.uploadFile = function () {
 		$("#file_upload").unbind();
 		$("#file_upload").change(function () {
+			if(!this.files){
+				return;
+			}
 			var file = this.files[0];
 			var xhr = new XMLHttpRequest();
 			var fd = new FormData();
@@ -207,6 +218,7 @@ app.controller("filelist", function ($scope, $http) {
 					} else {
 						// 上传出错
 						upload.status = -1;
+						upload.errormsg= xhr.responseText;
 					}
 					sessionStorage.setItem(uploadID, JSON.stringify(upload));
 				}
@@ -220,6 +232,7 @@ app.controller("filelist", function ($scope, $http) {
 				}
 				uploadArray.push(uploadID);
 				sessionStorage.setItem("uploadArray", JSON.stringify(uploadArray));
+				$("#file_upload").val("");
 			}
 		})
 		$("#file_upload").trigger('click');
@@ -264,27 +277,45 @@ app.controller("filelist", function ($scope, $http) {
 				$http.put("api/files/" + $scope.selectedFile.base64filepath + "/" + newfilename, $scope.$parent.token, postCfg).then(success,
 					errorEvent);
 				break;
+			case "download":
+				if (!$scope.url) {
+					toastr.error("请输入下载链接！");
+					return;
+				}
+				var url = Base64.encodeURI($scope.url);
+				$http.post("api/download/" + url, $scope.$parent.token, postCfg).then(success,
+					errorEvent);
+				break;
 		}
 	}
 });
 
 // 传输列表
-app.controller("transportlist", function ($scope, $http, $interval) {
-	sessionStorage.clear();
-	// 定时器 定时获取上传下载任务
-	var timer = $interval(
-		function () {
-			$scope.$parent.uploadlist = [];
-			var uploadArray = sessionStorage.getItem("uploadArray");
-			if(uploadArray){
-				uploadArray = JSON.parse(uploadArray);
-				for (var i = 0; i < uploadArray.length; i++) {
-					$scope.$parent.uploadlist.push(JSON.parse(sessionStorage.getItem(uploadArray[i])));
-				}
+app.controller("transportlist", function ($scope, $http) {
+	loadUpload();
+	// 加载服务端下载任务
+	function loadDownload(){
+		$http.get("api/download", $scope.$parent.token).then(function success(response) {
+			if (response) {
+				$scope.$parent.downloadlist = response.data.result;
+				setTimeout(loadUpload(), 2000);
 			}
-		},
-		2000
-	);
+		}, errorEvent);
+	}
+	//获取上传任务
+	function loadUpload(){
+		$scope.$parent.uploadlist = [];
+		var uploadArray = sessionStorage.getItem("uploadArray");
+		if(uploadArray){
+			uploadArray = JSON.parse(uploadArray);
+			for (var i = 0; i < uploadArray.length; i++) {
+				$scope.$parent.uploadlist.push(JSON.parse(sessionStorage.getItem(uploadArray[i])));
+			}
+		}
+		loadDownload();
+	}
+	
+	sessionStorage.clear();
 	// 监听页面切换显示
 	$scope.$watch("showCtrl", function (showCtrlValue) {
 		if (showCtrlValue == 0) {
@@ -295,7 +326,11 @@ app.controller("transportlist", function ($scope, $http, $interval) {
 	$scope.$watch("uploadlist", function (uploadlist) {
 		$scope.ullist = uploadlist;
 	});
-	//清除已完成的任务
+	// 监控下载任务
+	$scope.$watch("downloadlist", function (uploadlist) {
+		$scope.dllist = uploadlist;
+	});
+	// 清除已完成的任务
 	$scope.delUpload = function(ts){
 		var uploadArray = JSON.parse(sessionStorage.getItem("uploadArray"));
 		for (var i = 0; i < uploadArray.length; i++) {

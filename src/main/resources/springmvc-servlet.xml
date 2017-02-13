@@ -31,6 +31,7 @@
 			<mvc:mapping path="/files/**" />
 			<mvc:mapping path="/login/logout" />
 			<mvc:mapping path="/share/**" />
+			<mvc:mapping path="/download/**" />
 			<mvc:mapping path="/play/**" />
 			<bean class="name.zjq.blog.pcd.interceptor.LoginUserAuth" />
 		</mvc:interceptor>

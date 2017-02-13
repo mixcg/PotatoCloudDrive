@@ -56,7 +56,7 @@
 					<li><input type="file" id="file_upload" name="file" class="hidden" value="" /> <a href="javascript:void(0)"
 						ng-click="uploadFile()">上传文件</a></li>
 					<li class="nav-header">下载</li>
-					<li><a href="javascript:void(0)">新建离线下载</a></li>
+					<li><a href="javascript:void(0)" ng-click="addDownloadTask()">新建离线下载</a></li>
 				</ul>
 			</div>
 			<div class="col-md-9" data-toggle="context">
@@ -136,6 +136,11 @@
 										<label for='labelname'>文件（夹）名称</label> <input type='text' class='form-control' ng-model="filename" required />
 									</div>
 								</div>
+								<div class='row' ng-show="FileModal.type=='download'">
+									<div class='col-md-12'>
+										<label for='labelname'>链接</label> <input type='text' class='form-control' ng-model="url" required placeholder="目前支持http/https的链接下载"/>
+									</div>
+								</div>
 								<div class='row' ng-show="FileModal.type=='del'">
 									<div class='col-md-12'>你确定删除此文件吗？</div>
 								</div>
@@ -155,7 +160,8 @@
 							</div>
 							<div class="modal-footer">
 								<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-								<button type="submit" class="btn btn-primary">确定</button>
+								<button type="submit" ng-show="FileModal.type!='download'" class="btn btn-primary">确定</button>
+								<button type="submit" ng-show="FileModal.type=='download'" class="btn btn-primary">下载</button>
 							</div>
 						</div>
 					</form>
@@ -188,7 +194,7 @@
 							<div class="row">
 								<div class="col-md-1"></div>
 								<div class="col-md-11">
-									<span style="float: left">正在上传：<span ng-bind="ul.filename"></span></span> <span style="float: right">状态：<span ng-show="ul.status == 0">上传中</span><span ng-show="ul.status > 0">上传完毕</span><span ng-show="ul.status < 0">上传出错</span></span>
+									<span style="float: left">正在上传：<span ng-bind="ul.filename"></span></span> <span style="float: right">状态：<span ng-show="ul.status == 0">上传中</span><span ng-show="ul.status > 0">上传完毕</span><span ng-show="ul.status < 0" style="color:red">上传出错&nbsp;&nbsp;<span ng-bind="ul.errormsg" style="color:red"></span></span></span>
 								</div>
 							</div>
 						</div>
@@ -203,13 +209,13 @@
 							<div class="row">
 								<div class="col-md-1">
 									<h4>
-										<span class="label label-primary">下载</span>
+										<span class="label label-success">下载</span>
 									</h4>
 								</div>
 								<div class="col-md-10">
 									<div class="progress">
-										<div class="progress-bar" role="progressbar" aria-valuenow="2" aria-valuemin="0" ng-bind="dl.process+'%'"
-											aria-valuemax="100" style="min-width: 2em; width: {{dl.process}}%">2%</div>
+										<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="2" aria-valuemin="0" ng-bind="dl.percentcomplete+'%'"
+											aria-valuemax="100" style="min-width: 2em; width: {{dl.percentcomplete}}%"></div>
 									</div>
 								</div>
 								<div class="col-md-1">
@@ -219,7 +225,17 @@
 							<div class="row">
 								<div class="col-md-1"></div>
 								<div class="col-md-11">
-									<span style="float: left">正在上传：<span ng-bind="dl.filename"></span></span> <span style="float: right">状态：<span ng-show="dl.status == 0">上传中</span><span ng-show="dl.status > 0">上传完毕</span><span ng-show="dl.status < 0">上传出错</span></span>
+									<span>正在下载：<span ng-bind="dl.filename"></span>&nbsp;&nbsp;</span> 
+									<span>文件大小：<span ng-bind="dl.filesize"></span>&nbsp;&nbsp;</span> 
+									<span>下载速度：<span ng-bind="dl.downloadSpeed"></span>&nbsp;&nbsp;</span> 
+									<span>能否断点续传：<span ng-show="dl.continuetrans" style="color:red">是</span><span ng-hide="dl.continuetrans" style="color:red">否</span>&nbsp;&nbsp;</span> 
+									<span>状态：
+										<span ng-show="dl.status == 1">下载中</span>
+										<span ng-show="dl.status == 0">准备开始</span>
+										<span ng-show="dl.status == 2">下载完成</span>
+										<span ng-show="dl.status == -1" style="color:red">下载出错</span>
+									</span>
+									<span ng-bind="dl.message" style="color:red"></span>
 								</div>
 							</div>
 						</div>

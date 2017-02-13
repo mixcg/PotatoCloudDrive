@@ -24,9 +24,9 @@ public class GlobalExceptionHandler {
 		}
 	}
 
-	@ExceptionHandler(value = { RuntimeException.class, Exception.class })
-	public void dealRunException(Throwable paramThrowable, HttpServletResponse response) {
-		logger.error(paramThrowable);
+	@ExceptionHandler(value = { Exception.class })
+	public void dealRunException(Exception ex, HttpServletResponse response) {
+		logger.error(ex);
 		response.setContentType("text/plain;charset=UTF-8");
 		response.setStatus(500);
 		try {

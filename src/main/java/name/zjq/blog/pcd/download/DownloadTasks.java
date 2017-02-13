@@ -10,12 +10,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,12 +27,13 @@ import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 public class DownloadTasks {
-	private final Log logger = LogFactory.getLog(DownloadTasks.class);
+	private final static Lock lock = new ReentrantLock();
+	private final static Log logger = LogFactory.getLog(DownloadTasks.class);
 	private static boolean initFlag = false;
 	// 用户下载目录
 	private static final Map<String, Path> USER_DOWNLOAD_DIR = new HashMap<String, Path>();
 	// 下载任务
-	private static final Map<String, DLInterface> DOWNLOAD_TASKS = new LinkedHashMap<String, DLInterface>();
+	private static final Map<String, Map<String, DLInterface>> DOWNLOAD_TASKS = new HashMap<String, Map<String, DLInterface>>();
 
 	/**
 	 * 添加用户下载目录
@@ -46,6 +50,7 @@ public class DownloadTasks {
 			Files.createDirectory(userDir);
 		}
 		USER_DOWNLOAD_DIR.put(username, userDir);
+		DOWNLOAD_TASKS.put(username, new LinkedHashMap<String, DLInterface>());
 	}
 
 	public static void initDownloadTasks() {
@@ -53,6 +58,16 @@ public class DownloadTasks {
 			new DownloadTasks().new InitDownloadTask().start();
 		}
 		initFlag = true;
+	}
+
+	private static synchronized Map<String, DLInterface> getTaskMapByUsername(String username) {
+		if (DOWNLOAD_TASKS.containsKey(username)) {
+			return DOWNLOAD_TASKS.get(username);
+		} else {
+			Map<String, DLInterface> userTask = new LinkedHashMap<String, DLInterface>();
+			DOWNLOAD_TASKS.put(username, userTask);
+			return userTask;
+		}
 	}
 
 	/**
@@ -63,18 +78,97 @@ public class DownloadTasks {
 	 * @throws CustomLogicException
 	 */
 	public static String addDownloadTask(String username, String url) throws CustomLogicException {
-		String taskID = StrUtil.getUUID();
-		String userdir = USER_DOWNLOAD_DIR.get(username).toAbsolutePath().toString();
-		if (url.startsWith("http") || url.startsWith("https")) {
-			HttpDownload httpDownload = new HttpDownload(userdir, url);
-			new Thread(httpDownload).start();
-			DOWNLOAD_TASKS.put(taskID, httpDownload);
-		} else if (url.startsWith("ftp")) {
+		try {
+			lock.lock();
+			String taskID = StrUtil.getUUID();
+			String userdir = USER_DOWNLOAD_DIR.get(username).toAbsolutePath().toString();
+			if (url.startsWith("http") || url.startsWith("https")) {
+				HttpDownload httpDownload = new HttpDownload(userdir, url);
+				new Thread(httpDownload).start();
+				getTaskMapByUsername(username).put(taskID, httpDownload);
+			} else if (url.startsWith("ftp")) {
 
-		} else {
-			throw new CustomLogicException(400, "不支持的下载链接！", null);
+			} else {
+				throw new CustomLogicException(400, "不支持的下载链接！", null);
+			}
+			return taskID;
+		} finally {
+			lock.unlock();
 		}
-		return taskID;
+	}
+
+	/**
+	 * 获取下载状态
+	 * 
+	 * @param taskID
+	 * @return
+	 */
+	public static List<Map<String, String>> getDownloadStatus(String username) {
+		List<Map<String, String>> tasklist = new ArrayList<Map<String, String>>();
+		Map<String, DLInterface> userTask = getTaskMapByUsername(username);
+		Iterator<String> taskIDs = userTask.keySet().iterator();
+		while (taskIDs.hasNext()) {
+			String taskID = taskIDs.next();
+			tasklist.add(userTask.get(taskID).getStatus());
+		}
+		return tasklist;
+	}
+
+	/**
+	 * 暂停下载
+	 * 
+	 * @param taskID
+	 */
+	public static boolean stopDownload(String username, String taskID) {
+		try {
+			lock.lock();
+			Map<String, DLInterface> userTask = getTaskMapByUsername(username);
+			if (userTask.containsKey(taskID)) {
+				userTask.get(taskID).stop();
+				return true;
+			}
+			return false;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * 删除下载
+	 * 
+	 * @param taskID
+	 * @return
+	 */
+	public static boolean deleteDownload(String username, String taskID) {
+		try {
+			lock.lock();
+			Map<String, DLInterface> userTask = getTaskMapByUsername(username);
+			if (userTask.containsKey(taskID)) {
+				userTask.get(taskID).delete();
+				userTask.remove(taskID);
+				return true;
+			}
+			return false;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * 下载重试
+	 * 
+	 * @param taskID
+	 * @return
+	 */
+	public static boolean retryDownload(String username, String taskID) throws CustomLogicException {
+		Map<String, DLInterface> userTask = getTaskMapByUsername(username);
+		if (userTask.containsKey(taskID)) {
+			String url = userTask.get(taskID).getStatus().get("url");
+			deleteDownload(username, taskID);
+			addDownloadTask(username, url);
+			return true;
+		}
+		return false;
 	}
 
 	class InitDownloadTask extends Thread {
@@ -108,10 +202,5 @@ public class DownloadTasks {
 				}
 			}
 		}
-	}
-	
-	public static void main(String args[]) throws IOException{
-		DownloadTasks.putUserDownloadDir("admin","D:/");
-		DownloadTasks.initDownloadTasks();
 	}
 }

@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -11,6 +12,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,9 +37,13 @@ public class HttpDownload implements Runnable, DLInterface {
 	private String message;// 消息
 	private DLSTATUSENUM downloadStatus;// 下载状态
 
-	private Path localfiletmp;
+	private boolean stopFlag = false;
+	private Path localfiletmp;// 本地已下载缓存文件
+	private Path cfgpath;// 下载配置文件
 	private int responseCode;// 响应状态
 	private CloseableHttpResponse response = null;
+
+	private int downloadSpeed;// 下载速度
 
 	public HttpDownload(String userdir, String url) {
 		this.userdir = userdir;
@@ -81,13 +88,13 @@ public class HttpDownload implements Runnable, DLInterface {
 			this.message = "用户downloads目录下存在相同命名文件，下载已停止";
 			return false;
 		} else {
-			localfiletmp = Paths.get(localfile.toAbsolutePath().toString() + ".tmp");// 本地已下载缓存文件
+			localfiletmp = Paths.get(localfile.toAbsolutePath().toString() + ".tmp");
 			if (Files.exists(localfiletmp, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
 				localFileSize = localfiletmp.toFile().length();
 			} else {
 				Files.createFile(localfiletmp);
 			}
-			Path cfgpath = Paths.get(localfile.toAbsolutePath().toString() + ".pcd.dl.cfg");// 本地已下载缓存文件
+			cfgpath = Paths.get(localfile.toAbsolutePath().toString() + ".pcd.dl.cfg");// 本地已下载缓存文件
 			if (!Files.exists(cfgpath, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
 				Files.createFile(cfgpath);
 			}
@@ -103,7 +110,7 @@ public class HttpDownload implements Runnable, DLInterface {
 		this.downloadStatus = DLSTATUSENUM.READY;
 		if (checkDownloadFile()) {
 			try {
-				if(checkLocalFile()){
+				if (checkLocalFile()) {
 					startDownloadFile();
 				}
 			} catch (IOException e) {
@@ -127,11 +134,19 @@ public class HttpDownload implements Runnable, DLInterface {
 			InputStream is = response.getEntity().getContent();
 			FileOutputStream fi = new FileOutputStream(localfiletmp.toFile());
 			FileChannel channel = fi.getChannel();
-
 			byte[] readBuffer = new byte[1048576];
 			ByteBuffer writebuffer = ByteBuffer.allocate(1048576);
+			long startTime = System.currentTimeMillis();
+			int writeSize = 0;
 			int readLength = -1;
-			while ((readLength = is.read(readBuffer)) != -1) {
+			while ((readLength = is.read(readBuffer)) != -1 && !stopFlag) {
+				writeSize += readLength;
+				long endTime = System.currentTimeMillis();
+				if (endTime - startTime > 1024) {
+					downloadSpeed = writeSize;
+					startTime = endTime;
+					writeSize = 0;
+				}
 				if (continueTrans) {
 					channel.position(localFileSize);
 				}
@@ -162,6 +177,7 @@ public class HttpDownload implements Runnable, DLInterface {
 	private void moveFile() {
 		try {
 			Files.move(localfiletmp, Paths.get(userdir, filename), StandardCopyOption.REPLACE_EXISTING);
+			Files.deleteIfExists(cfgpath);
 		} catch (IOException e) {
 			logger.error(e);
 		}
@@ -211,7 +227,50 @@ public class HttpDownload implements Runnable, DLInterface {
 		}
 	}
 
-	public static void main(String args[]) {
-		new HttpDownload("D:/", "http://dl.zjq.name/Shadowsocks-3.4.3.zip").run();
+	/**
+	 * 获取下载完成百分比
+	 * 
+	 * @return
+	 */
+	private String getPercentComplete() {
+		if(urlFileSize == 0 || localFileSize == 0){
+			return "0";
+		}
+		return new BigDecimal(localFileSize).divide(new BigDecimal(urlFileSize), 2, BigDecimal.ROUND_HALF_EVEN).multiply(new BigDecimal(100))
+				.toString();
+	}
+
+	@Override
+	public void stop() {
+		stopFlag = true;
+	}
+
+	@Override
+	public Map<String, String> getStatus() {
+		Map<String, String> dlstatus = new HashMap<String, String>();
+		dlstatus.put("url", url);
+		dlstatus.put("filename", filename);
+		dlstatus.put("filesize", calculateDescSize(urlFileSize));
+		dlstatus.put("downloadSpeed", calculateDescSize(downloadSpeed)+"/S");
+		dlstatus.put("percentcomplete", getPercentComplete());
+		dlstatus.put("continuetrans", String.valueOf(continueTrans));
+		dlstatus.put("status", downloadStatus.toString());
+		dlstatus.put("message", message);
+		return dlstatus;
+	}
+
+	@Override
+	public void delete() {
+		stopFlag = true;
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+		}
+		try {
+			Files.deleteIfExists(localfiletmp);
+			Files.deleteIfExists(cfgpath);
+		} catch (IOException e) {
+			logger.error(e);
+		}
 	}
 }
