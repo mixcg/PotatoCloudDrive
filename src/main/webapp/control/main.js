@@ -1,22 +1,4 @@
-//取消选择
-function cancelSelect(){
-	$("#filetable tr").each(function() {
-		$(this).removeClass("info");
-	});
-	$("#fileMenuShow").hide();
-}
-//添加选中效果
-function select(tr) {
-	$(tr).parent().find("tr").each(function() {
-		$(this).removeClass("info");
-	});
-	$(tr).addClass("info").addClass("selectLine");
-	$("#fileMenuShow").show();
-	var $scope = angular.element('.selectLine').scope();
-	$scope.$parent.select($scope);
-}
-
-var errorEvent = function(response) {
+var errorEvent = function (response) {
 	toastr.error(response.data);
 	if (response.status == 401) {
 		setTimeout("window.location.href = 'login.html'", 1000)
@@ -25,75 +7,50 @@ var errorEvent = function(response) {
 
 var app = angular.module('mainPageApp', []);
 var postCfg = {
-	headers : {
-		'Content-Type' : 'application/x-www-form-urlencoded'
+	headers: {
+		'Content-Type': 'application/x-www-form-urlencoded'
 	},
-	transformRequest : function(data) {
+	transformRequest: function (data) {
 		return $.param(data);
 	}
 };
-// 主面板
-app.controller("container", function($scope, $http) {
-	// 初始化目录导航
-	var navbar = new Array();
-	var file = {};
-	file.base64filepath = "";
-	file.name = "主目录";
-	navbar.push(file);
-	$scope.dirul = navbar;
 
+app.directive('fallbackSrc', function () {
+	var fallbackSrc = {
+		link: function postLink(scope, iElement, iAttrs) {
+			iElement.bind('error', function () {
+				angular.element(this).attr("src", iAttrs.fallbackSrc);
+			});
+		}
+	}
+	return fallbackSrc;
+});
+
+// 主面板
+app.controller("container", function ($scope, $http) {
+	$scope.uploadlist = new Array();
+	$scope.downloadlist = new Array();
 	// token
 	var token = {};
 	token.pcdtoken = CookieUtil.getCookie("pcdtoken");
 	$scope.token = token;
-
 	$scope.showCtrl = 3;
 	$scope.showCtrl = 1;
 	// 显示网盘
-	$scope.showDirve = function() {
+	$scope.showFileList = function () {
 		$scope.showCtrl = 1;
 	}
 	// 显示传输
-	$scope.showTransport = function() {
+	$scope.showTransport = function () {
 		$scope.showCtrl = 0;
 	}
 	// 显示分享
-	$scope.showShare = function() {
+	$scope.showShare = function () {
 		$scope.showCtrl = -1;
 	}
-	// 进入指定目录
-	$scope.enterDir = function(a) {
-		loadDir(a.file.base64filepath);
-		var file = {};
-		file.base64filepath = a.file.base64filepath;
-		file.name = a.file.filename;
-		$scope.dirul.push(file);
-	}
-	// 返回到指定目录
-	$scope.backup = function(li) {
-		var index = li.$index;
-		var length = $scope.dirul.length;
-		$scope.dirul.splice(index + 1, length - index + 1);
-		loadDir(li.li.base64filepath);
-	}
-	$scope.select = function(tr){
-		debugger
-		$scope.fileMenuShow = true;
-//		select(tr);
-	}
-	// 监听页面切换显示
-	$scope.$watch("showCtrl", function(showCtrlValue) {
-		switch (showCtrlValue) {
-		case 1:
-			loadDir();
-			break;
-		case 0:
-			break;
-		case -1:
-			break;
-		}
-	});
-
+});
+// 文件列表
+app.controller("filelist", function ($scope, $http) {
 	// 加载指定目录
 	function loadDir(requrl) {
 		if (requrl) {
@@ -101,13 +58,295 @@ app.controller("container", function($scope, $http) {
 		} else {
 			requrl = "api/files";
 		}
-		$http.get(requrl, $scope.token).then(function success(response) {
+		$http.get(requrl, $scope.$parent.token).then(function success(response) {
 			if (response) {
 				$scope.filelist = response.data.result;
 			}
 		}, errorEvent);
 	}
+	// 监听页面切换显示
+	$scope.$watch("showCtrl", function (showCtrlValue) {
+		if (showCtrlValue == 1) {
+			loadDir();
+		}
+	});
+	// 文件列表对话框关闭
+	$('#FileModal').on('hidden.bs.modal', function (e) {
+		$scope.filename = null;
+		$scope.selectedFile = null;
+		$scope.FileModal = null
+		$scope.shareFile = null;
+	});
+	// 初始化目录导航
+	var navbar = new Array();
+	var file = {};
+	file.base64filepath = "";
+	file.name = "主目录";
+	navbar.push(file);
+	$scope.dirul = navbar;
+	// 进入指定目录
+	$scope.enterDir = function (a) {
+		loadDir(a.base64filepath);
+		var file = {};
+		file.base64filepath = a.base64filepath;
+		file.name = a.filename;
+		$scope.dirul.push(file);
+	}
+	// 返回到指定目录
+	$scope.backup = function (li) {
+		var index = li.$index;
+		var length = $scope.dirul.length;
+		$scope.dirul.splice(index + 1, length - index + 1);
+		loadDir(li.li.base64filepath);
+	}
+	// 文件列表选中
+	$scope.select = function (tr) {
+		$scope.selectedFile = tr;
+	}
+	// 文件列表取消选择
+	$scope.cancelSelect = function () {
+		$scope.selectedFile = null;
+	}
+	// 重命名文件Modal
+	$scope.renameFileModal = function () {
+		var modal = {};
+		modal.title = "重命名文件：" + $scope.selectedFile.filename;
+		modal.type = "rename";
+		$scope.FileModal = modal;
+		$("#FileModal").modal();
+	}
+	// 删除文件Modal
+	$scope.delFileModal = function () {
+		var modal = {};
+		modal.title = "删除文件：" + $scope.selectedFile.filename;
+		modal.type = "del";
+		$scope.FileModal = modal;
+		$("#FileModal").modal();
+	}
+	// 新建文件Modal
+	$scope.newFileModal = function () {
+		var modal = {};
+		modal.title = "新建文件：";
+		modal.type = "file";
+		$scope.FileModal = modal;
+		$("#FileModal").modal();
+	}
+	// 新建文件夹Modal
+	$scope.newDirModal = function () {
+		var modal = {};
+		modal.title = "新建文件夹：";
+		modal.type = "directory";
+		$scope.FileModal = modal;
+		$("#FileModal").modal();
+	}
+	// 文件分享Modal
+	$scope.shareFileModal = function () {
+		// TODO 完善链接
+		$http.post("api/share/" + $scope.selectedFile.base64filepath, $scope.$parent.token, postCfg).then(function (response) {
+			if (response) {
+				response.data.result.link = response.data.result.id;
+				$scope.shareFile = response.data.result;
+				var modal = {};
+				modal.title = "分享成功！";
+				modal.type = "share";
+				$scope.FileModal = modal;
+				$("#FileModal").modal();
+			}
+		}, errorEvent);
+	}
+	// 文件播放
+	$scope.playFile = function () {
+		window.location.href = 'play.html?url=' + $scope.selectedFile.base64filepath;
+	}
+	// 文件下载
+	$scope.dlFile = function () {
+		window.location.href = 'api/files/' + $scope.selectedFile.base64filepath + "/download";
+	}
+	// 上传文件
+	$scope.uploadFile = function () {
+		$("#file_upload").unbind();
+		$("#file_upload").change(function () {
+			var file = this.files[0];
+			var xhr = new XMLHttpRequest();
+			var fd = new FormData();
+			fd.append("fileName", file);
+			var uploadID = new Date().getTime();
+			// 监听事件
+			xhr.upload.addEventListener("progress", function (evt) {
+				if (evt.lengthComputable) {
+					// evt.loaded：文件上传的大小 evt.total：文件总的大小
+					var percentComplete = Math.round((evt.loaded) * 100 / evt.total);
+					var upload = sessionStorage.getItem(uploadID);
+					if (!upload) {
+						upload = {};
+						upload.id = uploadID;
+					} else {
+						upload = JSON.parse(upload);
+					}
+					upload.filename = file.name;
+					upload.process = percentComplete;
+					upload.status = 0;
+					sessionStorage.setItem(uploadID, JSON.stringify(upload));
+				}
+			}, false);
+			// 发送文件和表单自定义参数
+			xhr.open("POST", "api/files", true);
+			xhr.send(fd);
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState === 4) {
+					var upload = sessionStorage.getItem(uploadID);
+					if (!upload) {
+						upload = {};
+						upload.id = uploadID;
+					} else {
+						upload = JSON.parse(upload);
+					}
+					if (xhr.status === 200) { //
+						// 上传完成
+						upload.status = 1;
+					} else {
+						// 上传出错
+						upload.status = -1;
+					}
+					sessionStorage.setItem(uploadID, JSON.stringify(upload));
+				}
+			}
+			if (file) {
+				var uploadArray = sessionStorage.getItem("uploadArray");
+				if (!uploadArray) {
+					uploadArray = new Array();
+				} else {
+					uploadArray = JSON.parse(uploadArray);
+				}
+				uploadArray.push(uploadID);
+				sessionStorage.setItem("uploadArray", JSON.stringify(uploadArray));
+			}
+		})
+		$("#file_upload").trigger('click');
+	}
+	// Modal提交
+	$scope.fileModalSubmit = function (modal) {
+		// TODO 移动
+		var success = function (response) {
+			if (response) {
+				toastr.info(response.data.resultdesc);
+				loadDir($scope.dirul[$scope.dirul.length - 1].base64filepath);
+				$("#FileModal").modal('hide');
+			}
+		}
+		switch (modal.type) {
+			case "del":
+				$http.delete("api/files/" + $scope.selectedFile.base64filepath, $scope.$parent.token, postCfg).then(success,
+					errorEvent);
+				break;
+			case "file":
+			case "directory":
+				if (!$scope.filename) {
+					toastr.error("请输入文件（夹）名称！");
+					return;
+				}
+				var newfilename = Base64.encodeURI($scope.filename);
+				var nowdir = $scope.dirul[$scope.dirul.length - 1].base64filepath;
+				if (nowdir) {
+					$http.post("api/files/" + nowdir + "/" + modal.type + "/" + newfilename, $scope.$parent.token, postCfg).then(success,
+						errorEvent);
+				} else {
+					$http.post("api/files/" + modal.type + "/" + newfilename, $scope.$parent.token, postCfg).then(success,
+						errorEvent);
+				}
+				break;
+			case "rename":
+				if (!$scope.filename) {
+					toastr.error("请输入文件（夹）名称！");
+					return;
+				}
+				var newfilename = Base64.encodeURI($scope.filename);
+				$http.put("api/files/" + $scope.selectedFile.base64filepath + "/" + newfilename, $scope.$parent.token, postCfg).then(success,
+					errorEvent);
+				break;
+		}
+	}
 });
+
+// 传输列表
+app.controller("transportlist", function ($scope, $http, $interval) {
+	sessionStorage.clear();
+	// 定时器 定时获取上传下载任务
+	var timer = $interval(
+		function () {
+			$scope.$parent.uploadlist = [];
+			var uploadArray = sessionStorage.getItem("uploadArray");
+			if(uploadArray){
+				uploadArray = JSON.parse(uploadArray);
+				for (var i = 0; i < uploadArray.length; i++) {
+					$scope.$parent.uploadlist.push(JSON.parse(sessionStorage.getItem(uploadArray[i])));
+				}
+			}
+		},
+		2000
+	);
+	// 监听页面切换显示
+	$scope.$watch("showCtrl", function (showCtrlValue) {
+		if (showCtrlValue == 0) {
+			$scope.ullist = $scope.$parent.uploadlist;
+		}
+	});
+	// 监控上传任务
+	$scope.$watch("uploadlist", function (uploadlist) {
+		$scope.ullist = uploadlist;
+	});
+	//清除已完成的任务
+	$scope.delUpload = function(ts){
+		var uploadArray = JSON.parse(sessionStorage.getItem("uploadArray"));
+		for (var i = 0; i < uploadArray.length; i++) {
+			if(uploadArray[i] == ts.id){
+				uploadArray.splice(i, 1); 
+			}
+		}
+		sessionStorage.setItem("uploadArray",JSON.stringify(uploadArray))
+		sessionStorage.removeItem(ts.id);
+	}
+});
+// 分享列表
+app.controller("sharelist", function ($scope, $http) {
+	function loadShareList() {
+		$http.get("api/share", $scope.$parent.token).then(function success(response) {
+			if (response) {
+				$scope.sharelist = response.data.result;
+			}
+		}, errorEvent);
+	}
+
+	// 监听页面切换显示
+	$scope.$watch("showCtrl", function (showCtrlValue) {
+		if (showCtrlValue == -1) {
+			loadShareList();
+		}
+	});
+	// 取消分享
+	$scope.cancelShare = function (file) {
+		$http.delete("api/share/" + file.id, $scope.$parent.token).then(function success(response) {
+			if (response) {
+				toastr.info(response.data.resultdesc);
+				loadShareList();
+			}
+		}, errorEvent);
+	}
+
+	// 复制分享连接
+	$scope.copyShareLink = function (file) {
+		// TODO 完善链接
+		new Clipboard('.copy', {
+			text: function (trigger) {
+				toastr.info("复制到剪切板成功！");
+				return "aaaaa";
+			}
+		});
+	}
+});
+
+
+
 // app.controller("navbar", function($navbar, $http) {
 // $navbar.showDirve = function() {
 // }
@@ -421,11 +660,11 @@ app.controller("container", function($scope, $http) {
 // /**
 // * other ---------------------------
 // */
-// 图片加载失败处理
-function ImgError(obj) {
-	obj.src = 'img/file.png'
-	obj.onerror = null
-}
+// // 图片加载失败处理
+// function ImgError(obj) {
+// obj.src = 'img/file.png'
+// obj.onerror = null
+// }
 // // 获取项目根路径
 // function getRootPath() {
 // var curWwwPath = window.document.location.href;

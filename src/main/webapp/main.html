@@ -2,6 +2,7 @@
 <html lang="zh-CN" ng-app="mainPageApp">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
 <head>
 <link href="css/bootstrap.css" rel="stylesheet">
 <link href="css/toastr.css" rel="stylesheet">
@@ -13,6 +14,7 @@
 }
 </style>
 </head>
+
 <body>
 	<div class="container" ng-controller="container">
 		<!-- 导航栏 -->
@@ -25,14 +27,13 @@
 						</div>
 						<div class="collapse navbar-collapse">
 							<ul class="nav navbar-nav">
-								<li><a href="javascipt:void(0)" ng-click="showDirve()">网盘</a></li>
-								<li class="dropdown"><a href="javascipt:void(0)"
-									ng-click="showTransport()">传输&nbsp;<span class="badge">0</span></a>
+								<li><a href="javascipt:void(0)" ng-click="showFileList()">网盘</a></li>
+								<li class="dropdown"><a href="javascipt:void(0)" ng-click="showTransport()">传输&nbsp;<span class="badge"
+										ng-bind="uploadlist.length+downloadlist.length"></span></a>
 								<li><a href="javascipt:void(0)" ng-click="showShare()">分享</a></li>
 							</ul>
 							<ul class="nav navbar-nav navbar-right">
-								<li class="dropdown"><a href="javascipt:void(0)"
-									class="dropdown-toggle" data-toggle="dropdown">管理员 <span
+								<li class="dropdown"><a href="javascipt:void(0)" class="dropdown-toggle" data-toggle="dropdown">管理员 <span
 										class="caret"></span></a>
 									<ul class="dropdown-menu" role="menu">
 										<li><a href="javascipt:void(0)" ng-click="showShare()">登出</a></li>
@@ -45,21 +46,17 @@
 		</div>
 
 		<!-- 网盘 -->
-		<div class="row" ng-show="showCtrl>0">
+		<div class="row" ng-show="showCtrl>0" ng-controller="filelist">
 			<div class="col-md-2">
 				<ul class="nav nav-list" id="mainNav">
 					<li class="nav-header">新建</li>
-					<li><a href="javascript:void(0)" type="file"
-						onclick="createNewFile(this)">新建文件</a></li>
-					<li><a href="javascript:void(0)" type="directory"
-						onclick="createNewFile(this)">新建文件夹</a></li>
+					<li><a href="javascript:void(0)" ng-click="newFileModal()">新建文件</a></li>
+					<li><a href="javascript:void(0)" ng-click="newDirModal()">新建文件夹</a></li>
 					<li class="nav-header">上传</li>
-					<li><input type="file" id="file_upload" name="file"
-						class="hidden" value="" /> <a href="javascript:void(0)"
-						onclick="uploadFile()">上传文件</a></li>
-					<li><a href="#">上传文件夹</a></li>
+					<li><input type="file" id="file_upload" name="file" class="hidden" value="" /> <a href="javascript:void(0)"
+						ng-click="uploadFile()">上传文件</a></li>
 					<li class="nav-header">下载</li>
-					<li><a href="#">新建离线下载</a></li>
+					<li><a href="javascript:void(0)">新建离线下载</a></li>
 				</ul>
 			</div>
 			<div class="col-md-9" data-toggle="context">
@@ -68,31 +65,30 @@
 						<tr>
 							<th colspan="11">
 								<ol class="breadcrumb" ng-init="dirul">
-									<li ng-repeat="li in dirul"><a href='javascript:void(0)'
-										path='' ng-click="backup(this)" ng-bind="li.name"></a></li>
+									<li ng-repeat="li in dirul"><a href='javascript:void(0)' path='' ng-click="backup(this)" ng-bind="li.name"></a>
+									</li>
 								</ol>
-								<div class="btn-toolbar" role="toolbar" id="fileMenuShow" style="display:none;">
+								<div class="btn-toolbar" role="toolbar" ng-hide="!selectedFile">
 									<div class="btn-group" role="group">
-										<button type="button" class="btn btn-default"
-											onclick="cancelSelect()">取消选择</button>
+										<button type="button" class="btn btn-default" ng-click="cancelSelect()">取消选择</button>
 									</div>
 									<div class="btn-group" role="group">
-										<button type="button" class="btn btn-default">
+										<button type="button" class="btn btn-default" ng-click="dlFile()" ng-hide="selectedFile.dir">
 											<span title='下载' class='glyphicon glyphicon-download-alt'></span>&nbsp;下载
 										</button>
-										<button type="button" class="btn btn-default">
+										<button type="button" class="btn btn-default" ng-click="playFile()" ng-show="selectedFile.isplayonline">
 											<span title='播放' class='glyphicon glyphicon-facetime-video'></span>&nbsp;播放
 										</button>
-										<button type="button" class="btn btn-default">
+										<button type="button" class="btn btn-default" ng-click="mvFileModal()">
 											<span title='移动' class='glyphicon glyphicon-share-alt'></span>&nbsp;移动
 										</button>
-										<button type="button" class="btn btn-default">
+										<button type="button" class="btn btn-default" ng-click="renameFileModal()">
 											<span title='重命名' class='glyphicon glyphicon-pencil'></span>&nbsp;重命名
 										</button>
-										<button type="button" class="btn btn-default">
+										<button type="button" class="btn btn-default" ng-click="shareFileModal()">
 											<span title='分享' class='glyphicon glyphicon-send'></span>&nbsp;分享
 										</button>
-										<button type="button" class="btn btn-default">
+										<button type="button" class="btn btn-default" ng-click="delFileModal()">
 											<span title='删除' class='glyphicon glyphicon-trash'></span>&nbsp;删除
 										</button>
 									</div>
@@ -108,38 +104,14 @@
 						</tr>
 					</thead>
 					<tbody ng-init="filelist">
-						<tr ng-repeat="file in filelist" onclick="select(this)">
-							<td><img src='img/{{file.filetype}}.png'
-								class='img-responsive' onerror='ImgError(this)'></td>
+						<tr ng-repeat="file in filelist" ng-class="{true:'info', false: ''}[file==selectedFile]" ng-click="select(file)">
+							<td><img src='img/{{file.filetype}}.png' class='img-responsive' fallback-src="img/file.png"></td>
 							<td>
 								<div ng-show="{{file.dir}}">
-									<a href='javascipt:void(0)' ng-click="enterDir(this)" ng-bind="file.filename"></a>
+									<a href='javascipt:void(0)' ng-click="enterDir(file)" ng-bind="file.filename"></a>
 								</div>
 								<div ng-hide="{{file.dir}}" ng-bind="file.filename"></div>
 							</td>
-							<!--	<td>
-								 <div style='visibility: hidden;' class="tablediv">
-									<a href='javascipt:void(0)' type='download'
-										onclick='FileOperate(this)' ng-hide="{{file.isdir}}"> <span
-										title='下载' class='glyphicon glyphicon-download-alt'></span>
-									</a> <a href='javascipt:void(0)' type='play'
-										onclick='FileOperate(this)' ng-show="{{file.showplay}}"> <span
-										title='播放' class='glyphicon glyphicon-facetime-video'></span>
-									</a> <a href='javascipt:void(0)' type='mv'
-										onclick='FileOperate(this)'> <span title='移动'
-										class='glyphicon glyphicon-share-alt'></span>
-									</a> <a href='javascipt:void(0)' type='rename'
-										onclick='FileOperate(this)'> <span title='重命名'
-										class='glyphicon glyphicon-pencil'></span>
-									</a> <a href='javascipt:void(0)' type='share'
-										onclick='FileOperate(this)'> <span title='分享'
-										class='glyphicon glyphicon-send'></span>
-									</a> <a href='javascipt:void(0)' type='del'
-										onclick='FileOperate(this)'> <span title='删除'
-										class='glyphicon glyphicon-trash'></span>
-									</a>
-								</div>
-							</td> -->
 							<td ng-bind="file.filetype"></td>
 							<td ng-bind="file.descsize"></td>
 							<td ng-bind="file.lastmodifiedtime"></td>
@@ -147,17 +119,116 @@
 					</tbody>
 				</table>
 			</div>
+			<!-- 文件列表对话框 -->
+			<div class="modal fade" id="FileModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+				<div class="modal-dialog" role="document">
+					<form role="form" novalidate ng-submit="fileModalSubmit(FileModal)">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+								<h4 class="modal-title" ng-bind="FileModal.title"></h4>
+							</div>
+							<div class="modal-body">
+								<div class='row' ng-show="FileModal.type=='rename'|| FileModal.type=='file'|| FileModal.type=='directory'">
+									<div class='col-md-12'>
+										<label for='labelname'>文件（夹）名称</label> <input type='text' class='form-control' ng-model="filename" required />
+									</div>
+								</div>
+								<div class='row' ng-show="FileModal.type=='del'">
+									<div class='col-md-12'>你确定删除此文件吗？</div>
+								</div>
+								<div class='row' ng-show="FileModal.type=='share'">
+									<div class='col-md-1'></div>
+									<div class='col-md-10'>
+										<div class="form-group">
+											<label for="sharelink">分享链接</label> <input type="text" class="form-control" ng-model="shareFile.link">
+										</div>
+										<div class="form-group">
+											<label for="sharepwd">访问密码</label> <input type="text" class="form-control" ng-model="shareFile.password">
+										</div>
+									</div>
+									<div class='col-md-1'></div>
+								</div>
+
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+								<button type="submit" class="btn btn-primary">确定</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
 		</div>
 		<!-- 传输 -->
-		<div class="row" id="transportlist" ng-show="showCtrl == 0">
-			<div class="col-md-11" data-toggle="context">
-				<div class="panel panel-default">
-					<div class="panel-body">这是一个基本的面板</div>
+		<div class="row" ng-show="showCtrl == 0" ng-controller="transportlist">
+			<!-- 上传 -->
+			<div ng-init="ullist" ng-repeat="ul in ullist">
+				<div class="col-md-11" data-toggle="context">
+					<div class="panel panel-default">
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-md-1">
+									<h4>
+										<span class="label label-primary">上传</span>
+									</h4>
+								</div>
+								<div class="col-md-10">
+									<div class="progress">
+										<div class="progress-bar" role="progressbar" aria-valuenow="2" aria-valuemin="0" ng-bind="ul.process+'%'"
+											aria-valuemax="100" style="min-width: 2em; width: {{ul.process}}%">2%</div>
+									</div>
+								</div>
+								<div class="col-md-1">
+									<button type="button" class="btn btn-default" ng-click="delUpload(ul)" ng-show="ul.status != 0"><span title='删除' class='glyphicon glyphicon-trash'></span></button>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-1"></div>
+								<div class="col-md-11">
+									<span style="float: left">正在上传：<span ng-bind="ul.filename"></span></span> <span style="float: right">状态：<span ng-show="ul.status == 0">上传中</span><span ng-show="ul.status > 0">上传完毕</span><span ng-show="ul.status < 0">上传出错</span></span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 下载 -->
+			<div ng-init="dllist" ng-repeat="dl in dllist">
+				<div class="col-md-11" data-toggle="context">
+					<div class="panel panel-default">
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-md-1">
+									<h4>
+										<span class="label label-primary">下载</span>
+									</h4>
+								</div>
+								<div class="col-md-10">
+									<div class="progress">
+										<div class="progress-bar" role="progressbar" aria-valuenow="2" aria-valuemin="0" ng-bind="dl.process+'%'"
+											aria-valuemax="100" style="min-width: 2em; width: {{dl.process}}%">2%</div>
+									</div>
+								</div>
+								<div class="col-md-1">
+									<button type="button" class="btn btn-default" ng-click="delUpload(ts)" ng-show="dl.status != 0"><span title='删除' class='glyphicon glyphicon-trash'></span></button>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-1"></div>
+								<div class="col-md-11">
+									<span style="float: left">正在上传：<span ng-bind="dl.filename"></span></span> <span style="float: right">状态：<span ng-show="dl.status == 0">上传中</span><span ng-show="dl.status > 0">上传完毕</span><span ng-show="dl.status < 0">上传出错</span></span>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 		<!-- 分享列表 -->
-		<div class="row" id="sharelist" ng-show="shareshow < 0">
+		<div class="row" id="sharelist" ng-show="showCtrl<0" ng-controller="sharelist">
 			<div class="col-md-11" data-toggle="context">
 				<table class="table table-hover" id="sharefiletable">
 					<thead>
@@ -170,71 +241,22 @@
 							<th>操作</th>
 						</tr>
 					</thead>
-					<tbody>
-						<tr>
-							<td><img src='img/folder.png' class='img-responsive'
-								onerror='ImgError(this)'></td>
-							<td></td>
-							<td></td>
-							<td></td>
-							<td></td>
+					<tbody ng-init="sharelist">
+						<tr ng-repeat="file in sharelist">
+							<td><img src='img/{{file.filetype}}.png' class='img-responsive' fallback-src="img/file.png"></td>
+							<td ng-bind="file.filename"></td>
+							<td ng-bind="file.filetype"></td>
+							<td ng-bind="file.discShareDate"></td>
+							<td ng-bind="file.downloadtimes"></td>
 							<td>
-								<div class="btn-group" role="group" aria-label="...">
-									<button type="button" class="btn btn-danger"
-										onclick="cancelShare(this)">取消分享</button>
-									<!-- <button type="button" class="btn btn-primary" onclick="watchShareFile(this)">查看</button> -->
-									<button type="button" class="btn btn-primary copy">复制分享链接</button>
+								<div class="btn-group" role="group">
+									<button type="button" class="btn btn-danger" ng-click="cancelShare(file)">取消分享</button>
+									<button type="button" class="btn btn-primary copy" ng-click="copyShareLink(file)">复制分享链接</button>
 								</div>
 							</td>
 						</tr>
 					</tbody>
 				</table>
-			</div>
-
-		</div>
-	</div>
-
-	<!-- 对话框 -->
-	<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
-		aria-labelledby="myModalLabel">
-		<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal"
-						aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>
-					<h4 class="modal-title">新建文件（夹）</h4>
-				</div>
-				<div class="modal-body">
-					<div class='row' type="singleRowInput">
-						<div class='col-md-12'>
-							<label for='labelname'>文件（夹）名称</label> <input type='text'
-								class='form-control' required='required' />
-						</div>
-					</div>
-					<div class='row' type="deltip">
-						<div class='col-md-12'>你确定删除此文件（夹）吗？</div>
-					</div>
-					<div class='row' type="shareDiv">
-						<div class='col-md-1'></div>
-						<div class='col-md-10'>
-							<div class="form-group">
-								<label for="sharelink">分享链接</label> <input type="text"
-									class="form-control" id="sharelink" onclick="this.select()">
-							</div>
-							<div class="form-group">
-								<label for="sharepwd">访问密码</label> <input type="text"
-									class="form-control" id="sharepwd">
-							</div>
-						</div>
-						<div class='col-md-1'></div>
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-					<button type="button" class="btn btn-primary" id="modalSubmit">确定</button>
-				</div>
 			</div>
 		</div>
 	</div>
@@ -247,7 +269,7 @@
 <script src="js/base64.min.js"></script>
 <script src="js/clipboard.min.js"></script>
 <script src="js/angular.min.js"></script>
-<script src="control/CustomAjax.js"></script>
 <script src="control/cookie.js"></script>
 <script src="control/main.js"></script>
+
 </html>

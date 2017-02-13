@@ -1,7 +1,8 @@
 package name.zjq.blog.pcd.routes;
 
-import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -11,6 +12,11 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.FileUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -118,10 +124,16 @@ public class FileController {
 		} else {
 			path = loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8");
 		}
-		if (DriveFile.renameFile(path, newfilename)) {
-			return new PR("文件重命名成功", null);
-		} else {
-			throw new CustomLogicException(500, "文件重命名失败", null);
+		try {
+			if (DriveFile.renameFile(path, newfilename)) {
+				return new PR("文件重命名成功", null);
+			} else {
+				throw new CustomLogicException(500, "文件重命名失败", null);
+			}
+		} catch (FileNotFoundException e1) {
+			throw new CustomLogicException(500, e1.getMessage(), null);
+		} catch (FileAlreadyExistsException e2) {
+			throw new CustomLogicException(500, e2.getMessage(), null);
 		}
 	}
 
@@ -164,13 +176,18 @@ public class FileController {
 		}
 
 		boolean finishFlag = false;
-		if (filetype.equals("directory")) {
-			finishFlag = DriveFile.createNewDir(path, filename);
-		} else if (filetype.equals("file")) {
-			finishFlag = DriveFile.createNewFile(path, filename);
-		} else {
-			throw new CustomLogicException(400, "不支持的操作", null);
+		try {
+			if (filetype.equals("directory")) {
+				finishFlag = DriveFile.createNewDir(path, filename);
+			} else if (filetype.equals("file")) {
+				finishFlag = DriveFile.createNewFile(path, filename);
+			} else {
+				throw new CustomLogicException(400, "不支持的操作", null);
+			}
+		} catch (FileAlreadyExistsException e1) {
+			throw new CustomLogicException(500, e1.getMessage(), null);
 		}
+
 		if (finishFlag) {
 			return new PR("新建文件成功", null);
 		} else {
@@ -209,11 +226,35 @@ public class FileController {
 					boolean fileExists = Files.exists(filepath);
 					if (!fileExists) {
 						file.transferTo(filepath.toFile());
+					}else{
+						throw new CustomLogicException(400, "文件已存在", null);
 					}
 				}
 			}
 			return new PR("上传成功", null);
 		}
 		throw new CustomLogicException(400, "请求错误", null);
+	}
+	/**
+	 * 文件下载
+	 * @param path
+	 * @param loginUser
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/{base64filepath}/download", method = RequestMethod.GET, produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<byte[]> fileDownload(@PathVariable("base64filepath") String path,
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+		Path file = Paths.get(loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8"));
+		if (Files.exists(file, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			headers.setContentDispositionFormData("attachment", file.getFileName().toString());
+			return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file.toFile()), headers,
+					HttpStatus.CREATED);
+		} else {
+			throw new CustomLogicException(500, "文件不存在", null);
+		}
 	}
 }

@@ -71,7 +71,12 @@ public class User {
 			RequestAgent ra = new RequestAgent(request);
 			String token = new StringBuilder().append(u.username).append(ra.getIp()).append(ra.getBrowserName())
 					.append(ra.getOsName()).append(u.uuid).toString();
-			return Coder.MD5(token, u.md5times).equals(_token) ? u : null;
+			if (Coder.MD5(token, u.md5times).equals(_token)) {
+				u.setExpirationtime(new Date().getTime() + 30 * 60 * 1000);
+				return u;
+			} else {
+				return null;
+			}
 		}
 		return null;
 	}

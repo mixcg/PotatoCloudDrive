@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -14,6 +15,8 @@ import name.zjq.blog.pcd.utils.Coder;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 public class FileShare {
+	private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
 	@FieldAlias
 	private String id;// 主键
 	@FieldAlias
@@ -39,7 +42,7 @@ public class FileShare {
 		Path file = Paths.get(loginUser.getDirectory(), filepath);
 		filename = file.getFileName().toString();
 		if (Files.isDirectory(file, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
-			this.filetype = "文件夹";
+			this.filetype = "folder";
 		} else {
 			if (filename.lastIndexOf(".") > -1) {
 				this.filetype = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
@@ -87,6 +90,10 @@ public class FileShare {
 
 	public int getDownloadtimes() {
 		return downloadtimes;
+	}
+
+	public String getDiscShareDate() {
+		return SDF.format(new Date(sharedate));
 	}
 
 	/**
@@ -142,8 +149,11 @@ public class FileShare {
 
 	/**
 	 * 取消分享
-	 * @param id 分享文件的id
-	 * @param owner 所有者
+	 * 
+	 * @param id
+	 *            分享文件的id
+	 * @param owner
+	 *            所有者
 	 * @return
 	 */
 	public static boolean cancelShare(String id, String owner) {

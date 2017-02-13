@@ -41,7 +41,7 @@ public class DriveFile {
 	private String lastmodifiedtime;// 文件最后修改时间
 	private boolean isplayonline = false;// 是否支持在线播放
 
-	public DriveFile(String maindir, Path fileArg, BasicFileAttributes attrs) {
+	public DriveFile(String maindir, Path fileArg, BasicFileAttributes attrs) throws IOException {
 		isdir = attrs.isDirectory();
 		filename = fileArg.getFileName().toString();
 		if (isdir) {
@@ -53,9 +53,9 @@ public class DriveFile {
 			if (CAN_PLAY_FILE_TYPE.contains(filetype)) {
 				isplayonline = true;
 			}
+			filesize = Files.size(fileArg);
 			descsize = calculateDescSize();
 		}
-		filesize = attrs.size();
 		String filepath = fileArg.toAbsolutePath().toString().replace("\\", "/").replace(maindir, "");
 		base64filepath = Coder.encoderURLBASE64((filepath).getBytes());
 		lastmodifiedtime = formatTime(attrs.lastModifiedTime().toMillis());
@@ -190,7 +190,7 @@ public class DriveFile {
 		Path source = Paths.get(filepath);
 		boolean pathExists = Files.exists(source, new LinkOption[] { LinkOption.NOFOLLOW_LINKS });
 		if (!pathExists) {
-			throw new FileNotFoundException("文件不存在");
+			throw new FileNotFoundException("原文件不存在");
 		} else {
 			Path target = source.resolveSibling(newfilename);
 			if (source.equals(target)) {
@@ -215,12 +215,13 @@ public class DriveFile {
 	 * @return
 	 * @throws IOException
 	 */
-	public static boolean createNewFile(String filepath, String newfilename) throws IOException {
+	public static boolean createNewFile(String filepath, String newfilename)
+			throws IOException, FileAlreadyExistsException {
 		newfilename = new String(Coder.decoderURLBASE64(newfilename), "utf-8");
 		Path source = Paths.get(filepath, newfilename);
 		boolean pathExists = Files.exists(source, new LinkOption[] { LinkOption.NOFOLLOW_LINKS });
 		if (pathExists) {
-			throw new IOException("文件已存在！");
+			throw new FileAlreadyExistsException("文件已存在！");
 		} else {
 			try {
 				Files.createFile(source);
@@ -240,12 +241,13 @@ public class DriveFile {
 	 * @return
 	 * @throws IOException
 	 */
-	public static boolean createNewDir(String filepath, String newfilename) throws IOException {
+	public static boolean createNewDir(String filepath, String newfilename)
+			throws IOException, FileAlreadyExistsException {
 		newfilename = new String(Coder.decoderURLBASE64(newfilename), "utf-8");
 		Path source = Paths.get(filepath, newfilename);
 		boolean pathExists = Files.exists(source, new LinkOption[] { LinkOption.NOFOLLOW_LINKS });
 		if (pathExists) {
-			throw new IOException("文件已存在！");
+			throw new FileAlreadyExistsException("文件已存在！");
 		} else {
 			try {
 				Files.createDirectory(source);

@@ -13,6 +13,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ public class DownloadTasks {
 	// 用户下载目录
 	private static final Map<String, Path> USER_DOWNLOAD_DIR = new HashMap<String, Path>();
 	// 下载任务
-	private static final Map<String, DLInterface> DOWNLOAD_TASKS = new HashMap<String, DLInterface>();
+	private static final Map<String, DLInterface> DOWNLOAD_TASKS = new LinkedHashMap<String, DLInterface>();
 
 	/**
 	 * 添加用户下载目录

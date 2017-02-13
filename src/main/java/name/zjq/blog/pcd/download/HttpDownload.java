@@ -25,14 +25,14 @@ import org.apache.http.impl.client.HttpClients;
 public class HttpDownload implements Runnable, DLInterface {
 	private final Log logger = LogFactory.getLog(HttpDownload.class);
 
+	private String userdir = "";// 用户目录
 	private String url;// url地址
 	private String filename;// 文件名称
 	private long urlFileSize;// 下载文件的大小
 	private long localFileSize;// 本地文件大小
-	private DLSTATUSENUM downloadStatus;// 下载状态
-	private String userdir = "";// 用户目录
 	private boolean continueTrans;// 是否支持断点续传
 	private String message;// 消息
+	private DLSTATUSENUM downloadStatus;// 下载状态
 
 	private Path localfiletmp;
 	private int responseCode;// 响应状态
@@ -74,11 +74,12 @@ public class HttpDownload implements Runnable, DLInterface {
 	 * 
 	 * @throws IOException
 	 */
-	private void checkLocalFile() throws IOException {
+	private boolean checkLocalFile() throws IOException {
 		Path localfile = Paths.get(userdir, filename);// 本地文件
 		if (Files.exists(localfile, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
 			this.downloadStatus = DLSTATUSENUM.FINISH;
-			this.message = "downloads目录下存在相同命名文件，下载已停止";
+			this.message = "用户downloads目录下存在相同命名文件，下载已停止";
+			return false;
 		} else {
 			localfiletmp = Paths.get(localfile.toAbsolutePath().toString() + ".tmp");// 本地已下载缓存文件
 			if (Files.exists(localfiletmp, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
@@ -94,6 +95,7 @@ public class HttpDownload implements Runnable, DLInterface {
 			fw.write(url);
 			fw.flush();
 			fw.close();
+			return true;
 		}
 	}
 
@@ -101,13 +103,14 @@ public class HttpDownload implements Runnable, DLInterface {
 		this.downloadStatus = DLSTATUSENUM.READY;
 		if (checkDownloadFile()) {
 			try {
-				checkLocalFile();
+				if(checkLocalFile()){
+					startDownloadFile();
+				}
 			} catch (IOException e) {
 				logger.error("download [" + url + "] ERROR", e);
 				this.downloadStatus = DLSTATUSENUM.ERROR;
 				return;
 			}
-			startDownloadFile();
 		}
 	}
 
