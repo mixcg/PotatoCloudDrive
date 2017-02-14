@@ -28,6 +28,7 @@ import org.apache.http.impl.client.HttpClients;
 public class HttpDownload implements Runnable, DLInterface {
 	private final Log logger = LogFactory.getLog(HttpDownload.class);
 
+	private String taskid;// 任务id
 	private String userdir = "";// 用户目录
 	private String url;// url地址
 	private String filename;// 文件名称
@@ -45,7 +46,8 @@ public class HttpDownload implements Runnable, DLInterface {
 
 	private int downloadSpeed;// 下载速度
 
-	public HttpDownload(String userdir, String url) {
+	public HttpDownload(String userdir, String url, String taskid) {
+		this.taskid = taskid;
 		this.userdir = userdir;
 		this.url = url;
 	}
@@ -84,7 +86,7 @@ public class HttpDownload implements Runnable, DLInterface {
 	private boolean checkLocalFile() throws IOException {
 		Path localfile = Paths.get(userdir, filename);// 本地文件
 		if (Files.exists(localfile, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
-			this.downloadStatus = DLSTATUSENUM.FINISH;
+			this.downloadStatus = DLSTATUSENUM.ERROR;
 			this.message = "用户downloads目录下存在相同命名文件，下载已停止";
 			return false;
 		} else {
@@ -125,6 +127,7 @@ public class HttpDownload implements Runnable, DLInterface {
 		if (urlFileSize - localFileSize <= 0) {
 			moveFile();
 			downloadStatus = DLSTATUSENUM.FINISH;
+			downloadSpeed = 0;
 			logger.info("下载文件" + filename + "完成");
 			return;
 		}
@@ -233,25 +236,28 @@ public class HttpDownload implements Runnable, DLInterface {
 	 * @return
 	 */
 	private String getPercentComplete() {
-		if(urlFileSize == 0 || localFileSize == 0){
+		if (urlFileSize == 0 || localFileSize == 0) {
 			return "0";
 		}
-		return new BigDecimal(localFileSize).divide(new BigDecimal(urlFileSize), 2, BigDecimal.ROUND_HALF_EVEN).multiply(new BigDecimal(100))
-				.toString();
+		return new BigDecimal(localFileSize).multiply(new BigDecimal(100))
+				.divide(new BigDecimal(urlFileSize), 2, BigDecimal.ROUND_HALF_EVEN).toString();
 	}
 
 	@Override
 	public void stop() {
 		stopFlag = true;
+		this.downloadStatus = DLSTATUSENUM.STOP;
+		this.downloadSpeed = 0;
 	}
 
 	@Override
 	public Map<String, String> getStatus() {
 		Map<String, String> dlstatus = new HashMap<String, String>();
+		dlstatus.put("taskid", taskid);
 		dlstatus.put("url", url);
 		dlstatus.put("filename", filename);
 		dlstatus.put("filesize", calculateDescSize(urlFileSize));
-		dlstatus.put("downloadSpeed", calculateDescSize(downloadSpeed)+"/S");
+		dlstatus.put("downloadSpeed", calculateDescSize(downloadSpeed) + "/S");
 		dlstatus.put("percentcomplete", getPercentComplete());
 		dlstatus.put("continuetrans", String.valueOf(continueTrans));
 		dlstatus.put("status", downloadStatus.toString());
@@ -267,7 +273,6 @@ public class HttpDownload implements Runnable, DLInterface {
 		} catch (InterruptedException e) {
 		}
 		try {
-			Files.deleteIfExists(localfiletmp);
 			Files.deleteIfExists(cfgpath);
 		} catch (IOException e) {
 			logger.error(e);

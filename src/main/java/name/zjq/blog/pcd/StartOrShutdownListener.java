@@ -70,7 +70,7 @@ public class StartOrShutdownListener implements ServletContextListener {
 			System.exit(1);
 		}
 		DBConnection.initDB(dbPath);
-		logger.error("初始化数据库配置成功");
+		logger.info("初始化数据库配置成功");
 	}
 
 }

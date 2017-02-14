@@ -61,6 +61,7 @@ app.controller("filelist", function ($scope, $http) {
 		$http.get(requrl, $scope.$parent.token).then(function success(response) {
 			if (response) {
 				$scope.filelist = response.data.result;
+				$scope.selectedFile = null;
 			}
 		}, errorEvent);
 	}
@@ -68,6 +69,9 @@ app.controller("filelist", function ($scope, $http) {
 	$scope.$watch("showCtrl", function (showCtrlValue) {
 		if (showCtrlValue == 1) {
 			loadDir();
+			var length = $scope.dirul.length;
+			$scope.dirul.splice(1, length);
+			$scope.selectedFile = null;
 		}
 	});
 	// 文件列表对话框关闭
@@ -291,18 +295,29 @@ app.controller("filelist", function ($scope, $http) {
 });
 
 // 传输列表
-app.controller("transportlist", function ($scope, $http) {
-	loadUpload();
+app.controller("transportlist", function ($scope, $http,$interval) {
+	var reqFlag = true;
+	
+	var p = $interval(function(){
+		if(reqFlag){
+			loadUpload();
+			reqFlag = false;
+		}
+		},2000);
+	
+	
 	// 加载服务端下载任务
 	function loadDownload(){
 		$http.get("api/download", $scope.$parent.token).then(function success(response) {
 			if (response) {
 				$scope.$parent.downloadlist = response.data.result;
-				setTimeout(loadUpload(), 2000);
+				reqFlag = true;
 			}
-		}, errorEvent);
+		}, function (response) {
+			reqFlag = true;
+		});
 	}
-	//获取上传任务
+	// 获取上传任务
 	function loadUpload(){
 		$scope.$parent.uploadlist = [];
 		var uploadArray = sessionStorage.getItem("uploadArray");
@@ -340,6 +355,23 @@ app.controller("transportlist", function ($scope, $http) {
 		}
 		sessionStorage.setItem("uploadArray",JSON.stringify(uploadArray))
 		sessionStorage.removeItem(ts.id);
+	}
+	var success = function(response){
+		if (response) {
+			toastr.info(response.data.resultdesc);
+		}
+	}
+	// 停止下载
+	$scope.stopDownload = function(dl){
+		$http.patch("api/download/"+dl.taskid, $scope.$parent.token).then(success,errorEvent);
+	}
+	// 下载重试
+	$scope.retryDownload = function(dl){
+		$http.put("api/download/"+dl.taskid, $scope.$parent.token).then(success,errorEvent);
+	}
+	// 删除下载
+	$scope.delDownload = function(dl){
+		$http.delete("api/download/"+dl.taskid, $scope.$parent.token).then(success,errorEvent);
 	}
 });
 // 分享列表

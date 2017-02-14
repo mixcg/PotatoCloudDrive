@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import name.zjq.blog.pcd.bo.User;
 import name.zjq.blog.pcd.download.DownloadTasks;
+import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
 import name.zjq.blog.pcd.interceptor.LoginUserAuth;
 import name.zjq.blog.pcd.utils.Coder;
 import name.zjq.blog.pcd.utils.PR;
@@ -18,6 +19,7 @@ import name.zjq.blog.pcd.utils.PR;
 public class DownloadController {
 	/**
 	 * 获取下载任务列表
+	 * 
 	 * @param loginUser
 	 * @return
 	 * @throws Exception
@@ -42,5 +44,62 @@ public class DownloadController {
 			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
 		String taskID = DownloadTasks.addDownloadTask(loginUser.getUsername(), new String(Coder.decoderURLBASE64(url)));
 		return new PR("添加下载任务成功", taskID);
+	}
+
+	/**
+	 * 停止下载
+	 * 
+	 * @param url
+	 * @param loginUser
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/{taskid}", method = RequestMethod.PATCH, produces = "application/json")
+	@ResponseBody
+	public PR stopDownload(@PathVariable("taskid") String taskid,
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+		if (DownloadTasks.stopDownload(loginUser.getUsername(), taskid)) {
+			return new PR("停止下载成功", null);
+		} else {
+			throw new CustomLogicException(500, "停止下载失败", null);
+		}
+	}
+
+	/**
+	 * 下载重试
+	 * 
+	 * @param url
+	 * @param loginUser
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/{taskid}", method = RequestMethod.PUT, produces = "application/json")
+	@ResponseBody
+	public PR retryDownload(@PathVariable("taskid") String taskid,
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+		if (DownloadTasks.retryDownload(loginUser.getUsername(), taskid)) {
+			return new PR("重新下载成功", null);
+		} else {
+			throw new CustomLogicException(500, "重新下载失败", null);
+		}
+	}
+
+	/**
+	 * 删除下载
+	 * 
+	 * @param taskid
+	 * @param loginUser
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/{taskid}", method = RequestMethod.DELETE, produces = "application/json")
+	@ResponseBody
+	public PR deleteDownload(@PathVariable("taskid") String taskid,
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+		if (DownloadTasks.deleteDownload(loginUser.getUsername(), taskid)) {
+			return new PR("删除下载成功", null);
+		} else {
+			throw new CustomLogicException(500, "删除下载失败", null);
+		}
 	}
 }

@@ -5,7 +5,7 @@
         http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 	<context-param>
 		<param-name>isLog4jAutoInitializationDisabled</param-name>
-		<param-value>true</param-value>
+		<param-value>false</param-value>
 	</context-param>
 
 	<servlet>
@@ -13,7 +13,7 @@
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
 		<init-param>
 			<param-name>contextConfigLocation</param-name>
-			<param-value>classpath:springmvc-servlet.xml,classpath:spring-config.xml</param-value>
+			<param-value>classpath:springmvc-servlet.xml</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -29,4 +29,5 @@
 	<listener>
 		<listener-class>name.zjq.blog.pcd.StartOrShutdownListener</listener-class>
 	</listener>
+	
 </web-app>

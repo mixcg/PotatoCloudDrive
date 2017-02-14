@@ -219,13 +219,23 @@
 									</div>
 								</div>
 								<div class="col-md-1">
-									<button type="button" class="btn btn-default" ng-click="delUpload(ts)" ng-show="dl.status != 0"><span title='删除' class='glyphicon glyphicon-trash'></span></button>
+									<div class="btn-group" role="group">
+										<button type="button" class="btn btn-default" ng-click="stopDownload(dl)" ng-show="dl.status == 1"><span title='停止下载' class='glyphicon glyphicon-stop'></span></button>
+										<button type="button" class="btn btn-default" ng-click="retryDownload(dl)" ng-show="dl.status == 3||dl.status == -1 "><span title='重试' class='glyphicon glyphicon-repeat'></span></button>
+										<button type="button" class="btn btn-default" ng-click="delDownload(dl)" ng-show="dl.status == 2||dl.status == -1 ||dl.status == 3 "><span title='删除下载' class='glyphicon glyphicon-trash'></span></button>
+									</div>
 								</div>
 							</div>
 							<div class="row">
 								<div class="col-md-1"></div>
 								<div class="col-md-11">
-									<span>正在下载：<span ng-bind="dl.filename"></span>&nbsp;&nbsp;</span> 
+									<span>正在下载：<span ng-bind="dl.url"></span></span> 
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-1"></div>
+								<div class="col-md-11">
+									<span>文件名称：<span ng-bind="dl.filename"></span>&nbsp;&nbsp;</span> 
 									<span>文件大小：<span ng-bind="dl.filesize"></span>&nbsp;&nbsp;</span> 
 									<span>下载速度：<span ng-bind="dl.downloadSpeed"></span>&nbsp;&nbsp;</span> 
 									<span>能否断点续传：<span ng-show="dl.continuetrans" style="color:red">是</span><span ng-hide="dl.continuetrans" style="color:red">否</span>&nbsp;&nbsp;</span> 
@@ -233,6 +243,7 @@
 										<span ng-show="dl.status == 1">下载中</span>
 										<span ng-show="dl.status == 0">准备开始</span>
 										<span ng-show="dl.status == 2">下载完成</span>
+										<span ng-show="dl.status == 3">已停止</span>
 										<span ng-show="dl.status == -1" style="color:red">下载出错</span>
 									</span>
 									<span ng-bind="dl.message" style="color:red"></span>

@@ -20,7 +20,11 @@ public enum DLSTATUSENUM {
 	/**
 	 * 下载完成
 	 */
-	FINISH(2);
+	FINISH(2),
+	/**
+	 * 已停止
+	 */
+	STOP(3);
 	private int dlcode;
 
 	private DLSTATUSENUM(int code) {

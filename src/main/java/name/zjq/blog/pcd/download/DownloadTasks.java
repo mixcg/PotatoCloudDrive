@@ -83,7 +83,7 @@ public class DownloadTasks {
 			String taskID = StrUtil.getUUID();
 			String userdir = USER_DOWNLOAD_DIR.get(username).toAbsolutePath().toString();
 			if (url.startsWith("http") || url.startsWith("https")) {
-				HttpDownload httpDownload = new HttpDownload(userdir, url);
+				HttpDownload httpDownload = new HttpDownload(userdir, url,taskID);
 				new Thread(httpDownload).start();
 				getTaskMapByUsername(username).put(taskID, httpDownload);
 			} else if (url.startsWith("ftp")) {
