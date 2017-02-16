@@ -28,6 +28,7 @@ app.directive('fallbackSrc', function () {
 
 // 主面板
 app.controller("container", function ($scope, $http) {
+	$("[data-toggle='popover']").popover();
 	$scope.uploadlist = new Array();
 	$scope.downloadlist = new Array();
 	// token
@@ -48,9 +49,35 @@ app.controller("container", function ($scope, $http) {
 	$scope.showShare = function () {
 		$scope.showCtrl = -1;
 	}
+	//退出登录
+	$scope.logout = function(){
+		$http.delete("api/login/logout", $scope.$parent.token).then(function success(response) {
+			if (response) {
+				CookieUtil.delCookie("pcdtoken");
+				window.location.href = 'login.html'
+			}
+		}, errorEvent);
+	}
 });
 // 文件列表
 app.controller("filelist", function ($scope, $http) {
+	// 加载移动modal目录列表
+	function moveModalLoadDir(){
+		var url = "api/files";
+		var movefilepath = $scope.FileModal.path;
+		var nowdir = $scope.FileModal.dirul[$scope.FileModal.dirul.length - 1].base64FilePath;
+		if(nowdir){
+			url = url +"/"+nowdir+"?accepttype=folder&filterfile="+movefilepath;
+		}else{
+			url = url +"?accepttype=folder&filterfile="+movefilepath;
+		}
+		$http.get(url, $scope.$parent.token).then(function success(response) {
+			if (response) {
+				$scope.FileModal.filelist = response.data.result;
+			}
+		}, errorEvent);
+	}
+	
 	// 加载指定目录
 	function loadDir(requrl) {
 		if (requrl) {
@@ -84,16 +111,16 @@ app.controller("filelist", function ($scope, $http) {
 	// 初始化目录导航
 	var navbar = new Array();
 	var file = {};
-	file.base64filepath = "";
+	file.base64FilePath = "";
 	file.name = "主目录";
 	navbar.push(file);
 	$scope.dirul = navbar;
 	// 进入指定目录
 	$scope.enterDir = function (a) {
-		loadDir(a.base64filepath);
+		loadDir(a.base64FilePath);
 		var file = {};
-		file.base64filepath = a.base64filepath;
-		file.name = a.filename;
+		file.base64FilePath = a.base64FilePath;
+		file.name = a.fileName;
 		$scope.dirul.push(file);
 	}
 	// 返回到指定目录
@@ -101,7 +128,7 @@ app.controller("filelist", function ($scope, $http) {
 		var index = li.$index;
 		var length = $scope.dirul.length;
 		$scope.dirul.splice(index + 1, length - index + 1);
-		loadDir(li.li.base64filepath);
+		loadDir(li.li.base64FilePath);
 	}
 	// 文件列表选中
 	$scope.select = function (tr) {
@@ -111,10 +138,37 @@ app.controller("filelist", function ($scope, $http) {
 	$scope.cancelSelect = function () {
 		$scope.selectedFile = null;
 	}
+	// 移动文件Modal
+	$scope.moveFileModal = function(){
+		var modal = {};
+		modal.title = "移动文件：" + $scope.selectedFile.fileName;
+		modal.type = "move";
+		modal.path = $scope.selectedFile.base64FilePath;
+		modal.dirul=new Array();
+		// 初始化移动Modal文件导航
+		var file = {};
+		file.base64FilePath = "";
+		file.fileName = "主目录";
+		modal.dirul.push(file);
+		$scope.FileModal = modal;
+		moveModalLoadDir();
+		$("#FileModal").modal();
+	}
+	
+	$scope.moveModalbackup = function(li){
+		var index = li.$index;
+		var length = $scope.FileModal.dirul.length;
+		$scope.FileModal.dirul.splice(index + 1, length - index + 1);
+		moveModalLoadDir();
+	}
+	$scope.moveModalEnterDir = function(file){
+		$scope.FileModal.dirul.push(file);
+		moveModalLoadDir();
+	}
 	// 重命名文件Modal
 	$scope.renameFileModal = function () {
 		var modal = {};
-		modal.title = "重命名文件：" + $scope.selectedFile.filename;
+		modal.title = "重命名文件：" + $scope.selectedFile.fileName;
 		modal.type = "rename";
 		$scope.FileModal = modal;
 		$("#FileModal").modal();
@@ -122,7 +176,7 @@ app.controller("filelist", function ($scope, $http) {
 	// 删除文件Modal
 	$scope.delFileModal = function () {
 		var modal = {};
-		modal.title = "删除文件：" + $scope.selectedFile.filename;
+		modal.title = "删除文件：" + $scope.selectedFile.fileName;
 		modal.type = "del";
 		$scope.FileModal = modal;
 		$("#FileModal").modal();
@@ -154,7 +208,7 @@ app.controller("filelist", function ($scope, $http) {
 	// 文件分享Modal
 	$scope.shareFileModal = function () {
 		// TODO 完善链接
-		$http.post("api/share/" + $scope.selectedFile.base64filepath, $scope.$parent.token, postCfg).then(function (response) {
+		$http.post("api/share/" + $scope.selectedFile.base64FilePath, $scope.$parent.token, postCfg).then(function (response) {
 			if (response) {
 				response.data.result.link = response.data.result.id;
 				$scope.shareFile = response.data.result;
@@ -168,11 +222,11 @@ app.controller("filelist", function ($scope, $http) {
 	}
 	// 文件播放
 	$scope.playFile = function () {
-		window.location.href = 'play.html?url=' + $scope.selectedFile.base64filepath;
+		window.location.href = 'play.html?url=' + $scope.selectedFile.base64FilePath;
 	}
 	// 文件下载
 	$scope.dlFile = function () {
-		window.location.href = 'api/files/' + $scope.selectedFile.base64filepath + "/download";
+		window.location.href = 'api/files/' + $scope.selectedFile.base64FilePath + "/download";
 	}
 	// 上传文件
 	$scope.uploadFile = function () {
@@ -243,17 +297,16 @@ app.controller("filelist", function ($scope, $http) {
 	}
 	// Modal提交
 	$scope.fileModalSubmit = function (modal) {
-		// TODO 移动
 		var success = function (response) {
 			if (response) {
 				toastr.info(response.data.resultdesc);
-				loadDir($scope.dirul[$scope.dirul.length - 1].base64filepath);
+				loadDir($scope.dirul[$scope.dirul.length - 1].base64FilePath);
 				$("#FileModal").modal('hide');
 			}
 		}
 		switch (modal.type) {
 			case "del":
-				$http.delete("api/files/" + $scope.selectedFile.base64filepath, $scope.$parent.token, postCfg).then(success,
+				$http.delete("api/files/" + $scope.selectedFile.base64FilePath, $scope.$parent.token, postCfg).then(success,
 					errorEvent);
 				break;
 			case "file":
@@ -263,7 +316,7 @@ app.controller("filelist", function ($scope, $http) {
 					return;
 				}
 				var newfilename = Base64.encodeURI($scope.filename);
-				var nowdir = $scope.dirul[$scope.dirul.length - 1].base64filepath;
+				var nowdir = $scope.dirul[$scope.dirul.length - 1].base64FilePath;
 				if (nowdir) {
 					$http.post("api/files/" + nowdir + "/" + modal.type + "/" + newfilename, $scope.$parent.token, postCfg).then(success,
 						errorEvent);
@@ -278,7 +331,7 @@ app.controller("filelist", function ($scope, $http) {
 					return;
 				}
 				var newfilename = Base64.encodeURI($scope.filename);
-				$http.put("api/files/" + $scope.selectedFile.base64filepath + "/" + newfilename, $scope.$parent.token, postCfg).then(success,
+				$http.patch("api/files/" + $scope.selectedFile.base64FilePath + "/" + newfilename, $scope.$parent.token, postCfg).then(success,
 					errorEvent);
 				break;
 			case "download":
@@ -289,6 +342,12 @@ app.controller("filelist", function ($scope, $http) {
 				var url = Base64.encodeURI($scope.url);
 				$http.post("api/download/" + url, $scope.$parent.token, postCfg).then(success,
 					errorEvent);
+				break;
+			case "move":
+				var nowdir = $scope.FileModal.dirul[$scope.FileModal.dirul.length - 1].base64FilePath;
+				var filepath = $scope.selectedFile.base64FilePath;
+				$http.put("api/files/" + filepath+"/"+nowdir, $scope.$parent.token, postCfg).then(success,
+						errorEvent);
 				break;
 		}
 	}
@@ -329,8 +388,6 @@ app.controller("transportlist", function ($scope, $http,$interval) {
 		}
 		loadDownload();
 	}
-	
-	sessionStorage.clear();
 	// 监听页面切换显示
 	$scope.$watch("showCtrl", function (showCtrlValue) {
 		if (showCtrlValue == 0) {
@@ -411,333 +468,3 @@ app.controller("sharelist", function ($scope, $http) {
 		});
 	}
 });
-
-
-
-// app.controller("navbar", function($navbar, $http) {
-// $navbar.showDirve = function() {
-// }
-// $navbar.showShare = function() {
-// }
-// $navbar.addNewDL = function() {
-//
-// }
-// $navbar.showTransport = function() {
-// }
-// });
-// var token = new Object();
-// var fileListTRDefault = null;
-//
-// $(function() {
-// sessionStorage.clear();
-// sessionStorage.setItem("uploadArray", new Array());
-// setInterval("refTransList()", 1000);
-// token.pcdtoken = CookieUtil.getCookie("pcdtoken");
-// ReqFileList();
-// $('#myModal').on('show.bs.modal', function(e) {
-// $("#myModal div[class='row']").each(function() {
-// $(this).addClass("hidden");
-// });
-// })
-// $('#myModal').on('hidden.bs.modal', function(e) {
-// $("#modalSubmit").removeClass("copy");
-// $("#modalSubmit").unbind();
-// $("#modalSubmit").text("确定");
-// })
-// });
-// // 传输列表刷新
-// function refTransList() {
-// var uploadArray = sessionStorage.getItem("uploadArray");
-// if (uploadArray) {
-// uploadArray = JSON.parse(uploadArray);
-// $(".badge").text(uploadArray.length);
-// for (var i = 0; i < uploadArray.length; i++) {
-// var filename = uploadArray[i];
-// console.log(filename + " " + sessionStorage.getItem(filename));
-// }
-// }
-// }
-//
-// function loadDrive() {
-// $("#wangpan").show();
-// $("#transportlist").hide();
-// $("#sharelist").hide();
-// ReqFileList();
-// }
-// // 请求文件列表
-// function ReqFileList(filepath) {
-// if (!filepath) {
-// filepath = "api/files"
-// CustomAjax.ajaxRequest(filepath, "GET", token, loadFileList);
-// $("#dirul li:gt(0)").remove();
-// } else {
-// filepath = "api/files/" + filepath;
-// CustomAjax.ajaxRequest(filepath, "GET", token, loadFileList);
-// }
-// }
-// // 加载文件列表
-// function loadFileList(data) {
-// var datas = data.result;
-// if (!fileListTRDefault) {
-// fileListTRDefault = $('#filetable tbody tr').eq(0);
-// }
-// $('#filetable tbody').empty();
-// for (var i = 0; i < datas.length; i++) {
-// var tmptr = fileListTRDefault.clone();
-// var tmpdata = datas[i];
-// if (tmpdata.filetype == "文件夹") {
-// tmptr.find("td").eq(1).find("a").html(tmpdata.filename);
-// tmptr.find("td").eq(2).find("a[type='download']").hide();
-// tmptr.find("td").eq(2).find("a[type='play']").hide();
-// } else {
-// tmptr.find("td").eq(0).find("img").attr("src", "img/" + tmpdata.filetype +
-// ".png");
-// tmptr.find("td").eq(1).html(tmpdata.filename);
-// if (tmpdata.filetype.toLowerCase() != "mp4") {
-// tmptr.find("td").eq(2).find("a[type='play']").hide();
-// }
-// }
-// tmptr.find("td").eq(3).html(tmpdata.filetype);
-// tmptr.find("td").eq(4).html(tmpdata.descsize);
-// tmptr.find("td").eq(5).html(tmpdata.lastmodifiedtime);
-// tmptr.attr("path", tmpdata.base64filepath);
-// tmptr.attr("filename", tmpdata.filename);
-// $('#filetable tbody').append(tmptr);
-// }
-// $("#filetable td").hover(function() {
-// $(this).parent().find("td").eq(2).find("div").css('visibility', 'visible');
-// }, function() {
-// $(this).parent().find("td").eq(2).find("div").css('visibility', 'hidden');
-// })
-// }
-// // 进入指定目录
-// function EnterDir(label) {
-// var path = $(label).parent().parent().attr("path");
-// var li = $("#dirul").find("li").eq(0).clone();
-// li.find("a").attr("path", path).html($(label).html());
-// $("#dirul").append(li);
-// ReqFileList(path);
-// }
-// // 返回到指定目录
-// function BackDir(label) {
-// var index = $(label).parent().index();
-// $("#dirul li:gt(" + index + ")").remove();
-// var path = $(label).attr("path");
-// ReqFileList(path);
-// }
-// // 新建文件或文件夹
-// function createNewFile(label) {
-// var type = $(label).attr("type");
-// var modalTitle = $("#myModal h4[class='modal-title']");
-// modalTitle.html("新建文件（夹）");
-// var singleRowInput = $("#myModal div[type='singleRowInput']");
-// singleRowInput.find("input").val("");
-// $("#myModal").modal();
-// singleRowInput.removeClass("hidden");
-// $("#modalSubmit").on('click', function() {
-// var thisdir = $("#dirul li:last").find("a").attr("path");
-// var newfilename = singleRowInput.find("input").val();
-// newfilename = Base64.encodeURI(newfilename);
-// if (!thisdir) {
-// CustomAjax.ajaxRequest("api/files/" + type + "/" + newfilename, "POST",
-// token, refreshThisDir);
-// } else {
-// CustomAjax.ajaxRequest("api/files/" + thisdir + "/" + type + "/" +
-// newfilename, "POST", token, refreshThisDir);
-// }
-// });
-// }
-// // 关闭窗体,刷新当前目录信息
-// function refreshThisDir(data) {
-// $("#myModal").modal('hide');
-// var thisdir = $("#dirul li:last").find("a").attr("path");
-// ReqFileList(thisdir);
-// }
-//
-// // 文件操作
-// function FileOperate(label) {
-// var filename = $(label).parents("tr").attr("filename");
-// var path = $(label).parents("tr").attr("path");
-// var dotype = $(label).attr("type");
-// switch (dotype) {
-// case "download":
-// var filepath = "";
-// CustomAjax.ajaxRequest(filepath, "GET", token, null);
-// break;
-// case "play":
-// window.location.href = 'play.html?url=' + path;
-// break;
-// case "del":
-// var modalTitle = $("#myModal h4[class='modal-title']");
-// modalTitle.html("删除文件（夹）：" + filename);
-// var deltip = $("#myModal div[type='deltip']");
-// $("#myModal").modal();
-// deltip.removeClass("hidden");
-// $("#modalSubmit").on('click', function() {
-// CustomAjax.ajaxRequest("api/files/" + path, "DELETE", token, refreshThisDir);
-// });
-// break;
-// case "mv":
-// break;
-// case "rename":
-// var type = $(label).attr("type");
-// var modalTitle = $("#myModal h4[class='modal-title']");
-// modalTitle.html("重命名文件（夹）：" + filename);
-// var singleRowInput = $("#myModal div[type='singleRowInput']");
-// singleRowInput.find("input").val("");
-// $("#myModal").modal();
-// singleRowInput.removeClass("hidden");
-// $("#modalSubmit").on('click', function() {
-// var newfilename = singleRowInput.find("input").val();
-// newfilename = Base64.encodeURI(newfilename);
-// CustomAjax.ajaxRequest("api/files/" + path + "/" + newfilename, "PUT", token,
-// refreshThisDir);
-// });
-// break;
-// case "share":
-// CustomAjax.ajaxRequest("api/share/" + path, "POST", token, shareSuccess);
-// break;
-// }
-// }
-//
-// function shareSuccess(data) {
-// var modalTitle = $("#myModal h4[class='modal-title']");
-// modalTitle.html("分享成功！");
-// var sharefile = data.result;
-// $("#sharelink").val(getRootPath() + sharefile.id);
-// $("#sharepwd").val(sharefile.password);
-//
-// $("#modalSubmit").text("复制");
-// $("#modalSubmit").addClass("copy");
-// new Clipboard('.copy', {
-// text : function(trigger) {
-// // TODO finish copy
-// toastr.info("复制到剪切板成功！");
-// return "aaaaa";
-// }
-// });
-// var shareDiv = $("#myModal div[type='shareDiv']");
-// $("#myModal").modal();
-// shareDiv.removeClass("hidden");
-// }
-// // 上传文件
-// function uploadFile() {
-// $("#file_upload").unbind();
-// $("#file_upload").change(function() {
-// var file = this.files[0];
-// var xhr = new XMLHttpRequest();
-// var fd = new FormData();
-// fd.append("fileName", file);
-// // 监听事件
-// xhr.upload.addEventListener("progress", function(evt) {
-// if (evt.lengthComputable) {
-// // evt.loaded：文件上传的大小 evt.total：文件总的大小
-// var percentComplete = Math.round((evt.loaded) * 100 / evt.total);
-// sessionStorage.setItem(file.name, percentComplete);
-// }
-// }, false);
-// // 发送文件和表单自定义参数
-// xhr.open("POST", "api/files", true);
-// xhr.send(fd);
-// if (file) {
-// var uploadArray = sessionStorage.getItem("uploadArray");
-// if (!uploadArray) {
-// uploadArray = new Array();
-// } else {
-// uploadArray = JSON.parse(uploadArray);
-// }
-// uploadArray.push(file.name);
-// sessionStorage.setItem("uploadArray", JSON.stringify(uploadArray));
-// }
-// })
-// $("#file_upload").trigger('click');
-// }
-// /**
-// * 传输列表
-// */
-// function loadTransport() {
-// $("#wangpan").hide();
-// $("#transportlist").show();
-// $("#sharelist").hide();
-// }
-//
-// /**
-// * 分享列表----------------------------
-// */
-// var shareListTRDefault = null;
-// function loadShareList() {
-// $("#wangpan").hide();
-// $("#transportlist").hide();
-// $("#sharelist").show();
-// CustomAjax.ajaxRequest("api/share", "GET", token, loadShareFileList);
-// new Clipboard('.copy').destroy();
-// new Clipboard('.copy', {
-// text : function(trigger) {
-// var tr = $(trigger).parents("tr");
-// var id = tr.attr("id");
-// var password = tr.attr("password");
-// toastr.info("复制到剪切板成功！");
-// return id + password;
-// }
-// });
-// }
-// // 加载分享列表
-// function loadShareFileList(data) {
-// var datas = data.result;
-// if (!shareListTRDefault) {
-// shareListTRDefault = $('#sharefiletable tbody tr').eq(0);
-// }
-// $('#sharefiletable tbody').empty();
-// for (var i = 0; i < datas.length; i++) {
-// var tmptr = shareListTRDefault.clone();
-// var tmpdata = datas[i];
-// if (tmpdata.filetype != "文件夹") {
-// tmptr.find("td").eq(0).find("img").attr("src", "img/" + tmpdata.filetype +
-// ".png");
-// }
-// tmptr.find("td").eq(1).html(tmpdata.filename);
-// tmptr.find("td").eq(2).html(tmpdata.filetype);
-// tmptr.find("td").eq(3).html(tmpdata.sharedate);
-// tmptr.find("td").eq(4).html(tmpdata.downloadtimes);
-// tmptr.attr("id", tmpdata.id);
-// tmptr.attr("password", tmpdata.password);
-// tmptr.attr("filepath", tmpdata.filepath);
-// $('#sharefiletable tbody').append(tmptr);
-// }
-// }
-// // 取消分享
-// function cancelShare(label) {
-// var id = $(label).parents("tr").attr("id");
-// CustomAjax.ajaxRequest("api/share/" + id, "DELETE", token,
-// cancelShareSuccess);
-// }
-// function cancelShareSuccess(data) {
-// CustomAjax.ajaxRequest("api/share", "GET", token, loadShareFileList);
-// }
-// /**
-// * 退出登录----------------------------
-// */
-// function logout() {
-// CustomAjax.ajaxRequest("api/login/logout", "DELETE", token, logoutSuccess);
-// }
-// function logoutSuccess() {
-// CookieUtil.delCookie("pcdtoken");
-// window.location.href = "login.html";
-// }
-// /**
-// * other ---------------------------
-// */
-// // 图片加载失败处理
-// function ImgError(obj) {
-// obj.src = 'img/file.png'
-// obj.onerror = null
-// }
-// // 获取项目根路径
-// function getRootPath() {
-// var curWwwPath = window.document.location.href;
-// var pathName = window.document.location.pathname;
-// var pos = curWwwPath.indexOf(pathName);
-// var localhostPaht = curWwwPath.substring(0, pos);
-// var projectName = pathName.substring(0, pathName.substr(1).indexOf('/') + 1);
-// return (localhostPaht + projectName);
-// }

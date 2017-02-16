@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import name.zjq.blog.pcd.bo.FileShare;
-import name.zjq.blog.pcd.bo.User;
+import name.zjq.blog.pcd.bean.FileShare;
+import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
 import name.zjq.blog.pcd.interceptor.LoginUserAuth;
+import name.zjq.blog.pcd.services.ShareFileService;
 import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
 
@@ -34,7 +35,8 @@ public class ShareController {
 			throw new CustomLogicException(400, "参数为空", null);
 		} else {
 			FileShare f = new FileShare(loginUser, path);
-			if (f.addNewShare()) {
+			f = ShareFileService.addNewShareFile(f);
+			if (f != null) {
 				return new PR("文件分享成功", f);
 			} else {
 				throw new CustomLogicException(500, "文件分享失败", null);
@@ -50,7 +52,7 @@ public class ShareController {
 	@RequestMapping(method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public PR getAllShare(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
-		return new PR("查询成功", FileShare.searchAllShare(loginUser.getUsername()));
+		return new PR("查询成功", ShareFileService.searchAllShare(loginUser.getUsername()));
 	}
 
 	/**
@@ -64,8 +66,9 @@ public class ShareController {
 	 */
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = "application/json")
 	@ResponseBody
-	public PR cancelShare(@PathVariable String id, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
-		if (FileShare.cancelShare(id, loginUser.getUsername())) {
+	public PR cancelShare(@PathVariable String id, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser)
+			throws Exception {
+		if (ShareFileService.cancelShare(id, loginUser.getUsername())) {
 			return new PR("取消分享成功", null);
 		}
 		throw new CustomLogicException(500, "取消分享失败", null);

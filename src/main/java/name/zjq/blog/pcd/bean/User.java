@@ -1,4 +1,4 @@
-package name.zjq.blog.pcd.bo;
+package name.zjq.blog.pcd.bean;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -6,14 +6,20 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import name.zjq.blog.pcd.utils.Coder;
+import name.zjq.blog.pcd.utils.CoderUtil;
 import name.zjq.blog.pcd.utils.RequestAgent;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 public class User {
 	private static Map<String, User> userlist = new HashMap<String, User>();
 
-	public static void addConfigUser(String username, String password, String directory) {
+	/**
+	 * 用户注册
+	 * @param username 用户名
+	 * @param password 密码
+	 * @param directory 目录
+	 */
+	public static void registerUser(String username, String password, String directory) {
 		userlist.put(username, new User(username, password, directory));
 	}
 
@@ -48,7 +54,7 @@ public class User {
 		String cilentinfo = new StringBuilder().append(username).append(ra.getIp()).append(ra.getBrowserName())
 				.append(ra.getOsName()).append(uuid).toString();
 		int x = (int) (Math.random() * 100);
-		token = Coder.MD5(cilentinfo, x);
+		token = CoderUtil.MD5(cilentinfo, x);
 		md5times = x;
 		this.expirationtime = new Date().getTime() + 30 * 60 * 1000;
 		userlist.put(token, this);
@@ -71,7 +77,7 @@ public class User {
 			RequestAgent ra = new RequestAgent(request);
 			String token = new StringBuilder().append(u.username).append(ra.getIp()).append(ra.getBrowserName())
 					.append(ra.getOsName()).append(u.uuid).toString();
-			if (Coder.MD5(token, u.md5times).equals(_token)) {
+			if (CoderUtil.MD5(token, u.md5times).equals(_token)) {
 				u.setExpirationtime(new Date().getTime() + 30 * 60 * 1000);
 				return u;
 			} else {

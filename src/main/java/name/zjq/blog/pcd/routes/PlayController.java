@@ -21,9 +21,9 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import name.zjq.blog.pcd.bo.User;
+import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.interceptor.LoginUserAuth;
-import name.zjq.blog.pcd.utils.Coder;
+import name.zjq.blog.pcd.utils.CoderUtil;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 @Controller
@@ -44,7 +44,7 @@ public class PlayController {
 			path = loginUser.getDirectory();
 		} else {
 			try {
-				path = loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8");
+				path = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8");
 			} catch (Exception e) {
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return;

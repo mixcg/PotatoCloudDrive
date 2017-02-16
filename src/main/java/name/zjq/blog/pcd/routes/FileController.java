@@ -7,30 +7,30 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
-import name.zjq.blog.pcd.bo.DriveFile;
-import name.zjq.blog.pcd.bo.User;
+import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
 import name.zjq.blog.pcd.interceptor.LoginUserAuth;
-import name.zjq.blog.pcd.utils.Coder;
+import name.zjq.blog.pcd.services.CloudFileService;
+import name.zjq.blog.pcd.utils.CoderUtil;
 import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
 
@@ -44,15 +44,21 @@ public class FileController {
 	 */
 	@RequestMapping(method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public PR getFileLst(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
-		return getFileList(null, loginUser);
+	public PR getFileLst(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser,
+			@RequestParam(value = "accepttype", required = false) String filtertype,
+			@RequestParam(value = "filterfile", required = false) String filterfile) throws Exception {
+		return getFileList(null, loginUser, filtertype, filterfile);
 	}
 
 	/**
-	 * 获取指定目录文件列表或文件
+	 * 获取指定目录全部文件
 	 * 
 	 * @param path
 	 *            文件或文件夹路径(base64编码)
+	 * @param accepttype
+	 *            按照参数返回指定类型的文件，可传值类型 folder ,file
+	 * @param filterfile
+	 *            过滤文件，文件或文件夹路径(base64编码)，不返回此文件及文件下子文件
 	 * @param loginUser
 	 * @return
 	 * @throws Exception
@@ -60,17 +66,19 @@ public class FileController {
 	@RequestMapping(value = "/{base64filepath}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public PR getFileList(@PathVariable("base64filepath") String path,
-			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser,
+			@RequestParam(value = "accepttype", required = false) String accepttype,
+			@RequestParam(value = "filterfile", required = false) String filterfile) throws Exception {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
-			path = loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8");
+			path = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8");
 		}
-		List<DriveFile> files = DriveFile.getFileList(loginUser.getDirectory(), path);
-		if (files == null) {
-			throw new CustomLogicException(404, "文件不存在", null);
+		if (filterfile != null) {
+			filterfile = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(filterfile), "utf-8");
+			filterfile = Paths.get(filterfile).toAbsolutePath().toString();
 		}
-		return new PR("查询成功", files);
+		return new PR("查询成功", CloudFileService.getFileList(loginUser.getDirectory(), path, accepttype, filterfile));
 	}
 
 	/**
@@ -89,10 +97,10 @@ public class FileController {
 		if (StrUtil.isNullOrEmpty(path)) {
 			throw new CustomLogicException(400, "参数为空", null);
 		} else {
-			path = loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8");
+			path = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8");
 		}
 		try {
-			if (DriveFile.delFile(path)) {
+			if (CloudFileService.delFile(path)) {
 				return new PR("文件删除成功", null);
 			} else {
 				throw new CustomLogicException(500, "文件删除失败", null);
@@ -113,7 +121,7 @@ public class FileController {
 	 * @return
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/{base64filepath}/{base64newfilename}", method = RequestMethod.PUT, produces = "application/json")
+	@RequestMapping(value = "/{base64filepath}/{base64newfilename}", method = RequestMethod.PATCH, produces = "application/json")
 	@ResponseBody
 	public PR rnameFile(@PathVariable("base64filepath") String path,
 			@PathVariable("base64newfilename") String newfilename,
@@ -121,10 +129,10 @@ public class FileController {
 		if (StrUtil.isNullOrEmpty(path)) {
 			throw new CustomLogicException(400, "参数为空", null);
 		} else {
-			path = loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8");
+			path = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8");
 		}
 		try {
-			if (DriveFile.renameFile(path, newfilename)) {
+			if (CloudFileService.renameFile(path, newfilename)) {
 				return new PR("文件重命名成功", null);
 			} else {
 				throw new CustomLogicException(500, "文件重命名失败", null);
@@ -155,7 +163,7 @@ public class FileController {
 	/**
 	 * 在指定目录新建文件或文件夹
 	 * 
-	 * @param path
+	 * @param base64filepath
 	 *            文件或文件夹路径(base64编码)
 	 * @param filename
 	 *            文件或文件夹名称(base64编码)
@@ -171,15 +179,15 @@ public class FileController {
 		if (StrUtil.isNullOrEmpty(path)) {
 			path = loginUser.getDirectory();
 		} else {
-			path = loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8");
+			path = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8");
 		}
 
 		boolean finishFlag = false;
 		try {
 			if (filetype.equals("directory")) {
-				finishFlag = DriveFile.createNewDir(path, filename);
+				finishFlag = CloudFileService.createNewDir(path, filename);
 			} else if (filetype.equals("file")) {
-				finishFlag = DriveFile.createNewFile(path, filename);
+				finishFlag = CloudFileService.createNewFile(path, filename);
 			} else {
 				throw new CustomLogicException(400, "不支持的操作", null);
 			}
@@ -192,6 +200,29 @@ public class FileController {
 		} else {
 			throw new CustomLogicException(500, "新建文件（文件夹）失败", null);
 		}
+	}
+
+	/**
+	 * 在指定目录新建文件或文件夹
+	 * 
+	 * @param base64filepath
+	 *            文件或文件夹路径(base64编码)
+	 * @param filename
+	 *            文件或文件夹名称(base64编码)
+	 * @param loginUser
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/{base64filepath}/{newdirpath}", method = RequestMethod.PUT, produces = "application/json")
+	@ResponseBody
+	public PR moveFile(@PathVariable("base64filepath") String filepath, @PathVariable("newdirpath") String newdirpath,
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+		filepath = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(filepath), "utf-8");
+		newdirpath = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(newdirpath), "utf-8");
+		Path sourceFile = Paths.get(filepath);
+		Path targetFile = Paths.get(newdirpath);
+		CloudFileService.moveFile(sourceFile, targetFile);
+		return new PR("移动文件成功", null);
 	}
 
 	/**
@@ -225,7 +256,7 @@ public class FileController {
 					boolean fileExists = Files.exists(filepath);
 					if (!fileExists) {
 						file.transferTo(filepath.toFile());
-					}else{
+					} else {
 						throw new CustomLogicException(400, "文件已存在", null);
 					}
 				}
@@ -234,21 +265,48 @@ public class FileController {
 		}
 		throw new CustomLogicException(400, "请求错误", null);
 	}
+
 	/**
 	 * 文件下载
+	 * 
 	 * @param path
 	 * @param loginUser
 	 * @return
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/{base64filepath}/download", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/{base64filepath}/download")
+	public void fileDownload(@PathVariable("base64filepath") String path,
+			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Path file = Paths.get(loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8"));
+		CloudFileService.fileDownload(file, request,response);
+	}
+
+	/**
+	 * 视频播放
+	 * 
+	 * @param path
+	 * @param loginUsera
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/{base64filepath}/play", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<byte[]> fileDownload(@PathVariable("base64filepath") String path,
+	public ResponseEntity<byte[]> filePlay(@PathVariable("base64filepath") String path,
 			@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
-		Path file = Paths.get(loginUser.getDirectory() + "/" + new String(Coder.decoderURLBASE64(path), "utf-8"));
-		if (Files.exists(file, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
+		Path file = Paths.get(loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8"));
+		if (Files.exists(file, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })
+				|| Files.isDirectory(file, new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
+			String filetype = file.getFileName().toString();
+			int indexOf = filetype.lastIndexOf(".");
+			if (indexOf > -1) {
+				filetype = filetype.substring(indexOf + 1).toLowerCase();
+			}
+			if (!CloudFileService.isCanPlayOnline(filetype)) {
+				throw new CustomLogicException(500, "文件不支持在线播放", null);
+			}
 			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			headers.set("Content-Type", Files.probeContentType(file));
 			headers.setContentDispositionFormData("attachment", file.getFileName().toString());
 			return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file.toFile()), headers,
 					HttpStatus.CREATED);

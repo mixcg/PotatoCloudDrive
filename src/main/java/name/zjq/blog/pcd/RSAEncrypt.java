@@ -15,7 +15,7 @@ import javax.crypto.Cipher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import name.zjq.blog.pcd.utils.Coder;
+import name.zjq.blog.pcd.utils.CoderUtil;
 
 public class RSAEncrypt {
 	private final Log logger = LogFactory.getLog(RSAEncrypt.class);
@@ -39,7 +39,7 @@ public class RSAEncrypt {
 			return pk;
 		}
 		try {
-			pk = Coder.encoderBASE64(pubKey);
+			pk = CoderUtil.encoderBASE64(pubKey);
 			return pk;
 		} catch (Exception e) {
 			logger.error(e);
@@ -106,7 +106,7 @@ public class RSAEncrypt {
 			}
 			byte[] decryptedData = out.toByteArray();
 			out.close();
-			return Coder.encoderBASE64(decryptedData);
+			return CoderUtil.encoderBASE64(decryptedData);
 		} catch (Exception e) {
 			logger.error("公钥加密异常!", e);
 		}
@@ -131,7 +131,7 @@ public class RSAEncrypt {
 			Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
 			cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-			byte[] encryptedData = Coder.decoderBASE64(data);
+			byte[] encryptedData = CoderUtil.decoderBASE64(data);
 
 			int inputLen = encryptedData.length;
 			ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -2,14 +2,15 @@ package name.zjq.blog.pcd.utils;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
 
 /**
  * 编码util
  *
  */
-public class Coder {
-
+public class CoderUtil {
+	public static final SimpleDateFormat FORMMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	/**
 	 * BASE64解码
 	 * 

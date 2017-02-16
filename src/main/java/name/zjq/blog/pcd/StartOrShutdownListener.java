@@ -9,7 +9,7 @@ import javax.servlet.ServletContextListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import name.zjq.blog.pcd.bo.User;
+import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.db.DBConnection;
 import name.zjq.blog.pcd.download.DownloadTasks;
 import name.zjq.blog.pcd.utils.StrUtil;
@@ -52,7 +52,7 @@ public class StartOrShutdownListener implements ServletContextListener {
 					System.exit(1);
 				}
 				directory = directory.replace("\\", "/");
-				User.addConfigUser(username, password, directory);
+				User.registerUser(username, password, directory);
 				// 添加用户下载目录
 				DownloadTasks.putUserDownloadDir(username, directory);
 			}

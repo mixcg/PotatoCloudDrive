@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import name.zjq.blog.pcd.bo.User;
+import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.utils.StrUtil;
 
 public class LoginUserAuth implements HandlerInterceptor {

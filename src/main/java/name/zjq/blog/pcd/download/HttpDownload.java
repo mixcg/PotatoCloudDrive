@@ -273,7 +273,9 @@ public class HttpDownload implements Runnable, DLInterface {
 		} catch (InterruptedException e) {
 		}
 		try {
-			Files.deleteIfExists(cfgpath);
+			if (cfgpath != null) {
+				Files.deleteIfExists(cfgpath);
+			}
 		} catch (IOException e) {
 			logger.error(e);
 		}

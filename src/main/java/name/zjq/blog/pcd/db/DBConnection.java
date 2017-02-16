@@ -17,7 +17,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import name.zjq.blog.pcd.bo.FileShare;
+import name.zjq.blog.pcd.bean.FileShare;
 
 public class DBConnection {
 	private static final Log logger = LogFactory.getLog(DBConnection.class);

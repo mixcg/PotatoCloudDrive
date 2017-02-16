@@ -10,7 +10,9 @@ var CookieUtil = {
 	},
 	setCookie : function(key, value) {
 		CookieUtil.delCookie(key);
-		document.cookie = key + "=" + value + ";";
+		var exp = new Date(); 
+		exp.setTime(exp.getTime() + 30*60*1000);
+		document.cookie = key + "=" + value + ";expires="+ exp.toGMTString();
 	},
 	getCookie : function(key) {
 		var arr, reg = new RegExp("(^| )" + key + "=([^;]*)(;|$)");
