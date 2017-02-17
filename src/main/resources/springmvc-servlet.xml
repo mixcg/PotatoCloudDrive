@@ -39,7 +39,8 @@
 
 	<bean id="multipartResolver"
 		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
-		<property name="maxUploadSize" value="10737418240" />
-		<property name="maxInMemorySize" value="4096" />
+		<property name="defaultEncoding" value="utf-8"/>
+		<property name="maxUploadSize" value="-1" />
+		<property name="maxInMemorySize" value="-1" />
 	</bean>
 </beans>

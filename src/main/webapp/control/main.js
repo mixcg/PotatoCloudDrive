@@ -5,7 +5,7 @@ var errorEvent = function (response) {
 	}
 }
 
-var app = angular.module('mainPageApp', []);
+var app = angular.module('mainPageApp', ['angularFileUpload']);
 var postCfg = {
 	headers: {
 		'Content-Type': 'application/x-www-form-urlencoded'
@@ -50,7 +50,7 @@ app.controller("container", function ($scope, $http) {
 		$scope.showCtrl = -1;
 	}
 	//退出登录
-	$scope.logout = function(){
+	$scope.logout = function () {
 		$http.delete("api/login/logout", $scope.$parent.token).then(function success(response) {
 			if (response) {
 				CookieUtil.delCookie("pcdtoken");
@@ -60,16 +60,30 @@ app.controller("container", function ($scope, $http) {
 	}
 });
 // 文件列表
-app.controller("filelist", function ($scope, $http) {
+app.controller("filelist", ["$scope", "$http", "FileUploader", function ($scope, $http, FileUploader) {
+	var uploader = $scope.uploader = new FileUploader({
+		url: 'api/files',
+		autoUpload: true,
+		removeAfterUpload: false
+	});
+	//添加上传任务成功
+	uploader.onAfterAddingFile = function (fileItem) {
+		fileItem.id = new Date().getTime();
+		$scope.uploadlist.push(fileItem);
+	};
+	//上传错误
+	uploader.onErrorItem = function (item, response, status, headers) {
+		item.errormsg = response;
+	}
 	// 加载移动modal目录列表
-	function moveModalLoadDir(){
+	function moveModalLoadDir() {
 		var url = "api/files";
 		var movefilepath = $scope.FileModal.path;
 		var nowdir = $scope.FileModal.dirul[$scope.FileModal.dirul.length - 1].base64FilePath;
-		if(nowdir){
-			url = url +"/"+nowdir+"?accepttype=folder&filterfile="+movefilepath;
-		}else{
-			url = url +"?accepttype=folder&filterfile="+movefilepath;
+		if (nowdir) {
+			url = url + "/" + nowdir + "?accepttype=folder&filterfile=" + movefilepath;
+		} else {
+			url = url + "?accepttype=folder&filterfile=" + movefilepath;
 		}
 		$http.get(url, $scope.$parent.token).then(function success(response) {
 			if (response) {
@@ -77,7 +91,7 @@ app.controller("filelist", function ($scope, $http) {
 			}
 		}, errorEvent);
 	}
-	
+
 	// 加载指定目录
 	function loadDir(requrl) {
 		if (requrl) {
@@ -139,12 +153,12 @@ app.controller("filelist", function ($scope, $http) {
 		$scope.selectedFile = null;
 	}
 	// 移动文件Modal
-	$scope.moveFileModal = function(){
+	$scope.moveFileModal = function () {
 		var modal = {};
 		modal.title = "移动文件：" + $scope.selectedFile.fileName;
 		modal.type = "move";
 		modal.path = $scope.selectedFile.base64FilePath;
-		modal.dirul=new Array();
+		modal.dirul = new Array();
 		// 初始化移动Modal文件导航
 		var file = {};
 		file.base64FilePath = "";
@@ -154,14 +168,14 @@ app.controller("filelist", function ($scope, $http) {
 		moveModalLoadDir();
 		$("#FileModal").modal();
 	}
-	
-	$scope.moveModalbackup = function(li){
+
+	$scope.moveModalbackup = function (li) {
 		var index = li.$index;
 		var length = $scope.FileModal.dirul.length;
 		$scope.FileModal.dirul.splice(index + 1, length - index + 1);
 		moveModalLoadDir();
 	}
-	$scope.moveModalEnterDir = function(file){
+	$scope.moveModalEnterDir = function (file) {
 		$scope.FileModal.dirul.push(file);
 		moveModalLoadDir();
 	}
@@ -199,6 +213,7 @@ app.controller("filelist", function ($scope, $http) {
 	}
 	// 离线下载
 	$scope.addDownloadTask = function () {
+		$scope.url = null;
 		var modal = {};
 		modal.title = "离线下载：";
 		modal.type = "download";
@@ -230,69 +245,6 @@ app.controller("filelist", function ($scope, $http) {
 	}
 	// 上传文件
 	$scope.uploadFile = function () {
-		$("#file_upload").unbind();
-		$("#file_upload").change(function () {
-			if(!this.files){
-				return;
-			}
-			var file = this.files[0];
-			var xhr = new XMLHttpRequest();
-			var fd = new FormData();
-			fd.append("fileName", file);
-			var uploadID = new Date().getTime();
-			// 监听事件
-			xhr.upload.addEventListener("progress", function (evt) {
-				if (evt.lengthComputable) {
-					// evt.loaded：文件上传的大小 evt.total：文件总的大小
-					var percentComplete = Math.round((evt.loaded) * 100 / evt.total);
-					var upload = sessionStorage.getItem(uploadID);
-					if (!upload) {
-						upload = {};
-						upload.id = uploadID;
-					} else {
-						upload = JSON.parse(upload);
-					}
-					upload.filename = file.name;
-					upload.process = percentComplete;
-					upload.status = 0;
-					sessionStorage.setItem(uploadID, JSON.stringify(upload));
-				}
-			}, false);
-			// 发送文件和表单自定义参数
-			xhr.open("POST", "api/files", true);
-			xhr.send(fd);
-			xhr.onreadystatechange = function () {
-				if (xhr.readyState === 4) {
-					var upload = sessionStorage.getItem(uploadID);
-					if (!upload) {
-						upload = {};
-						upload.id = uploadID;
-					} else {
-						upload = JSON.parse(upload);
-					}
-					if (xhr.status === 200) { //
-						// 上传完成
-						upload.status = 1;
-					} else {
-						// 上传出错
-						upload.status = -1;
-						upload.errormsg= xhr.responseText;
-					}
-					sessionStorage.setItem(uploadID, JSON.stringify(upload));
-				}
-			}
-			if (file) {
-				var uploadArray = sessionStorage.getItem("uploadArray");
-				if (!uploadArray) {
-					uploadArray = new Array();
-				} else {
-					uploadArray = JSON.parse(uploadArray);
-				}
-				uploadArray.push(uploadID);
-				sessionStorage.setItem("uploadArray", JSON.stringify(uploadArray));
-				$("#file_upload").val("");
-			}
-		})
 		$("#file_upload").trigger('click');
 	}
 	// Modal提交
@@ -346,27 +298,27 @@ app.controller("filelist", function ($scope, $http) {
 			case "move":
 				var nowdir = $scope.FileModal.dirul[$scope.FileModal.dirul.length - 1].base64FilePath;
 				var filepath = $scope.selectedFile.base64FilePath;
-				$http.put("api/files/" + filepath+"/"+nowdir, $scope.$parent.token, postCfg).then(success,
-						errorEvent);
+				$http.put("api/files/" + filepath + "/" + nowdir, $scope.$parent.token, postCfg).then(success,
+					errorEvent);
 				break;
 		}
 	}
-});
+}]);
 
 // 传输列表
-app.controller("transportlist", function ($scope, $http,$interval) {
+app.controller("transportlist", function ($scope, $http, $interval) {
 	var reqFlag = true;
-	
-	var p = $interval(function(){
-		if(reqFlag){
-			loadUpload();
+
+	var p = $interval(function () {
+		if (reqFlag) {
+			loadDownload();
 			reqFlag = false;
 		}
-		},2000);
-	
-	
+	}, 2000);
+
+
 	// 加载服务端下载任务
-	function loadDownload(){
+	function loadDownload() {
 		$http.get("api/download", $scope.$parent.token).then(function success(response) {
 			if (response) {
 				$scope.$parent.downloadlist = response.data.result;
@@ -376,59 +328,37 @@ app.controller("transportlist", function ($scope, $http,$interval) {
 			reqFlag = true;
 		});
 	}
-	// 获取上传任务
-	function loadUpload(){
-		$scope.$parent.uploadlist = [];
-		var uploadArray = sessionStorage.getItem("uploadArray");
-		if(uploadArray){
-			uploadArray = JSON.parse(uploadArray);
-			for (var i = 0; i < uploadArray.length; i++) {
-				$scope.$parent.uploadlist.push(JSON.parse(sessionStorage.getItem(uploadArray[i])));
-			}
-		}
-		loadDownload();
-	}
-	// 监听页面切换显示
-	$scope.$watch("showCtrl", function (showCtrlValue) {
-		if (showCtrlValue == 0) {
-			$scope.ullist = $scope.$parent.uploadlist;
-		}
-	});
-	// 监控上传任务
-	$scope.$watch("uploadlist", function (uploadlist) {
-		$scope.ullist = uploadlist;
-	});
 	// 监控下载任务
-	$scope.$watch("downloadlist", function (uploadlist) {
-		$scope.dllist = uploadlist;
+	$scope.$watch("downloadlist", function (downloadlist) {
+		$scope.dllist = downloadlist;
 	});
-	// 清除已完成的任务
-	$scope.delUpload = function(ts){
-		var uploadArray = JSON.parse(sessionStorage.getItem("uploadArray"));
+	// 清除上传任务
+	$scope.delUpload = function (ts) {
+		ts.cancel();
+		ts.remove();
+		var uploadArray = $scope.$parent.uploadlist;
 		for (var i = 0; i < uploadArray.length; i++) {
-			if(uploadArray[i] == ts.id){
-				uploadArray.splice(i, 1); 
+			if (uploadArray[i].id == ts.id) {
+				uploadArray.splice(i, 1);
 			}
 		}
-		sessionStorage.setItem("uploadArray",JSON.stringify(uploadArray))
-		sessionStorage.removeItem(ts.id);
 	}
-	var success = function(response){
+	var success = function (response) {
 		if (response) {
 			toastr.info(response.data.resultdesc);
 		}
 	}
 	// 停止下载
-	$scope.stopDownload = function(dl){
-		$http.patch("api/download/"+dl.taskid, $scope.$parent.token).then(success,errorEvent);
+	$scope.stopDownload = function (dl) {
+		$http.patch("api/download/" + dl.taskid, $scope.$parent.token).then(success, errorEvent);
 	}
 	// 下载重试
-	$scope.retryDownload = function(dl){
-		$http.put("api/download/"+dl.taskid, $scope.$parent.token).then(success,errorEvent);
+	$scope.retryDownload = function (dl) {
+		$http.put("api/download/" + dl.taskid, $scope.$parent.token).then(success, errorEvent);
 	}
 	// 删除下载
-	$scope.delDownload = function(dl){
-		$http.delete("api/download/"+dl.taskid, $scope.$parent.token).then(success,errorEvent);
+	$scope.delDownload = function (dl) {
+		$http.delete("api/download/" + dl.taskid, $scope.$parent.token).then(success, errorEvent);
 	}
 });
 // 分享列表
