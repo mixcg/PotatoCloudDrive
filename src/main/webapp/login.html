@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/toastr.css" rel="stylesheet">
+</head>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-5"></div>
+		<div class="col-md-2">
+			<img alt="" src="img/cloud.png" class="img-responsive center-block">
+			<form role="form" ng-app="loginFormApp" ng-controller="login" ng-submit="loginAuth()">
+				<div class="form-group">
+					<label for="username">用户名</label> <input type="text"
+						class="form-control" placeholder="请输入用户名" ng-model="username" required>
+				</div>
+				<div class="form-group">
+					<label for="password">密码</label> <input type="password"
+						class="form-control" placeholder="请输入密码" ng-model="password" required>
+				</div>
+				<button type="submit" class="btn btn-primary">登录</button>
+			</form>
+		</div>
+		<div class="col-md-5"></div>
+	</div>
+</div>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/toastr.js"></script>
+<script src="js/jsencrypt.min.js"></script>
+<script src="js/angular.min.js"></script>
+<script src="control/RSAEncrypt.js"></script>
+<script src="control/cookie.js"></script>
+<script src="control/login.js"></script>
+</html>
