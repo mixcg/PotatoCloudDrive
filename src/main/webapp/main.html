@@ -118,10 +118,13 @@
                     ng-click="select(file)">
                     <td><img src='img/{{file.fileType}}.png' class='img-responsive' fallback-src="img/file.png"></td>
                     <td>
-                        <div ng-show="{{file.isdir}}">
+                        <div ng-show="{{file.dir}}">
                             <a href='javascipt:void(0)' ng-click="enterDir(file)" ng-bind="file.fileName"></a>
                         </div>
-                        <div ng-hide="{{file.isdir}}" ng-bind="file.fileName"></div>
+                        <div ng-show="{{file.canPreview}}">
+                            <a href='api/files/{{file.base64FilePath}}/play' target="_blank" ng-bind="file.fileName" class="bind_hover_card" ></a>
+                        </div>
+                        <div ng-show="!{{file.dir}} && !{{file.canPreview}}" ng-bind="file.fileName"></div>
                     </td>
                     <td ng-bind="file.fileType"></td>
                     <td ng-bind="file.describeFileSize"></td>

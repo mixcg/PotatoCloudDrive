@@ -187,7 +187,7 @@ public class FileController {
     /**
      * 移动文件到主目录
      *
-     * @param filepath   文件或文件夹路径(base64编码)
+     * @param filepath  文件或文件夹路径(base64编码)
      * @param loginUser
      * @return
      * @throws Exception
@@ -286,7 +286,7 @@ public class FileController {
                              @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser, HttpServletRequest request,
                              HttpServletResponse response) throws Exception {
         Path file = Paths.get(loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8"));
-        CloudFileService.fileDownload(file, request, response);
+        CloudFileService.filePlayOrDownload(false, file, request, response);
     }
 
     /**
@@ -298,27 +298,10 @@ public class FileController {
      * @throws Exception
      */
     @RequestMapping(value = "/{base64filepath}/play", method = RequestMethod.GET, produces = "application/json")
-    @ResponseBody
-    public ResponseEntity<byte[]> filePlay(@PathVariable("base64filepath") String path,
-                                           @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+    public void filePlay(@PathVariable("base64filepath") String path,
+                         @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser, HttpServletRequest request,
+                         HttpServletResponse response) throws Exception {
         Path file = Paths.get(loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8"));
-        if (Files.exists(file, new LinkOption[]{LinkOption.NOFOLLOW_LINKS})
-                || Files.isDirectory(file, new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
-            String filetype = file.getFileName().toString();
-            int indexOf = filetype.lastIndexOf(".");
-            if (indexOf > -1) {
-                filetype = filetype.substring(indexOf + 1).toLowerCase();
-            }
-            if (!CloudFileService.isCanPlayOnline(filetype)) {
-                throw new CustomLogicException(500, "文件不支持在线播放", null);
-            }
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Content-Type", Files.probeContentType(file));
-            headers.setContentDispositionFormData("attachment", file.getFileName().toString());
-            return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file.toFile()), headers,
-                    HttpStatus.CREATED);
-        } else {
-            throw new CustomLogicException(500, "文件不存在", null);
-        }
+        CloudFileService.filePlayOrDownload(true, file, request, response);
     }
 }

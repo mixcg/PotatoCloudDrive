@@ -49,10 +49,18 @@ public class CloudFileService {
 
     // 能够在线播放的文件类型
     private static final Set<String> CAN_PLAY_ONLINE_FILE_TYPES = new HashSet<String>();
+    // 支持在线预览的文件类型
+    private static final Set<String> CAN_PREVIEW_FILE_TYPES = new HashSet<String>();
 
     static {
         CAN_PLAY_ONLINE_FILE_TYPES.add("mp4");
         CAN_PLAY_ONLINE_FILE_TYPES.add("flv");
+
+        CAN_PREVIEW_FILE_TYPES.add("bmp");
+        CAN_PREVIEW_FILE_TYPES.add("jpg");
+        CAN_PREVIEW_FILE_TYPES.add("gif");
+        CAN_PREVIEW_FILE_TYPES.add("jpeg");
+        CAN_PREVIEW_FILE_TYPES.add("png");
     }
 
     /**
@@ -63,6 +71,16 @@ public class CloudFileService {
      */
     public static boolean isCanPlayOnline(String filetype) {
         return CAN_PLAY_ONLINE_FILE_TYPES.contains(filetype);
+    }
+
+    /**
+     * 检查文件是否支持预览
+     *
+     * @param filetype
+     * @return
+     */
+    public static boolean isCanPreview(String filetype) {
+        return CAN_PREVIEW_FILE_TYPES.contains(filetype);
     }
 
     /**
@@ -268,10 +286,12 @@ public class CloudFileService {
         if (!Files.isDirectory(targetFile, new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
             throw new CustomLogicException(400, "不能将一个文件或文件夹移动到一个文件里", null);
         }
-        if (sourceFile.toAbsolutePath().toString().indexOf(targetFile.toAbsolutePath().toString()) > -1) {
+        targetFile = targetFile.resolve(sourceFile.getFileName());
+        String targetFilePath = targetFile.toAbsolutePath().toString();
+        String sourceFilePath = sourceFile.toAbsolutePath().toString();
+        if (targetFilePath.indexOf(sourceFilePath) > -1 || targetFilePath.equals(sourceFilePath)) {
             throw new CustomLogicException(400, "不能将文件移动到自身或其子文件夹下", null);
         }
-        targetFile = targetFile.resolve(sourceFile.getFileName());
         if (Files.exists(targetFile, new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
             throw new CustomLogicException(400, "指定的新存储目录中已包含名称相同的文件或文件夹", null);
         }
@@ -279,7 +299,7 @@ public class CloudFileService {
     }
 
     /**
-     * 文件下载
+     * 文件播放或下载
      *
      * @param file
      * @param request
@@ -287,7 +307,7 @@ public class CloudFileService {
      * @throws CustomLogicException
      * @throws IOException
      */
-    public static void fileDownload(Path file, HttpServletRequest request, HttpServletResponse response)
+    public static void filePlayOrDownload(boolean playFlag, Path file, HttpServletRequest request, HttpServletResponse response)
             throws CustomLogicException, IOException {
         if (!Files.exists(file, new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
             throw new CustomLogicException(500, "文件不存在", null);
@@ -301,31 +321,41 @@ public class CloudFileService {
         if (!StrUtil.isNullOrEmpty(request.getHeader("Range"))) {
             response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
             response.setHeader("Content-Range",
-                    String.format("bytes %s-%s/%s", pointArray[0], pointArray[1], fileSize - 1));
+                    String.format("bytes %s-%s/%s", pointArray[0], pointArray[1], fileSize));
         } else {
             response.setStatus(HttpServletResponse.SC_OK);
         }
 
         response.setBufferSize(10485760);
         response.setHeader("Content-Disposition",
-                String.format("attachment;filename=\"%s\"", file.getFileName().toString()));
+                String.format("inline;filename=\"%s\"", file.getFileName().toString()));
         response.setHeader("Accept-Ranges", "bytes");
         response.setDateHeader("Last-Modified", Files.getLastModifiedTime(file).toMillis());
         response.setDateHeader("Expires", System.currentTimeMillis() + 1000 * 60 * 60 * 24);
-        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        response.setContentType(playFlag ? Files.probeContentType(file) : MediaType.APPLICATION_OCTET_STREAM_VALUE);
         response.setHeader("Content-Length", String.format("%s", pointArray[1] - pointArray[0] + 1));
         SeekableByteChannel input = null;
+        OutputStream output = null;
         try {
             input = Files.newByteChannel(file, StandardOpenOption.READ);
-            input.position(pointArray[0]);
+            output = response.getOutputStream();
             ByteBuffer buffer = ByteBuffer.allocate(10485760);
+            input.position(pointArray[0]);
             int hasRead;
-            while ((hasRead = input.read(buffer)) > -1) {
-                response.getWriter().write(new String(buffer.array(), 0, hasRead).toCharArray());
+            while ((hasRead = input.read(buffer)) != -1) {
                 buffer.clear();
+                output.write(buffer.array(), 0, hasRead);
             }
+            response.flushBuffer();
+        } catch (IllegalStateException e) {
         } finally {
-            input.close();
+            if (input != null) {
+                input.close();
+            }
+            if (output != null) {
+                output.flush();
+                output.close();
+            }
         }
     }
 
@@ -346,16 +376,27 @@ public class CloudFileService {
         Matcher matcher = RANGE_PATTERN.matcher(range);
         if (matcher.matches()) {
             String startGroup = matcher.group("start");
-            startPoint = StrUtil.isNullOrEmpty(startGroup) ? Integer.valueOf(startGroup) : startPoint;
+            startPoint = StrUtil.isNullOrEmpty(startGroup) ? startPoint : Integer.valueOf(startGroup);
             startPoint = startPoint < 0 ? 0 : startPoint;
 
             String endGroup = matcher.group("end");
-            endPoint = StrUtil.isNullOrEmpty(endGroup) ? Integer.valueOf(endGroup) : endPoint;
+            endPoint = StrUtil.isNullOrEmpty(endGroup) ? endPoint : Integer.valueOf(endGroup);
             endPoint = endPoint > fileSize - 1 ? fileSize - 1 : endPoint;
 
         }
         pointArray[0] = startPoint;
         pointArray[1] = endPoint;
         return pointArray;
+    }
+
+    /**
+     * 视频播放
+     *
+     * @param file
+     * @param request
+     * @param response
+     */
+    public static void filePlay(Path file, HttpServletRequest request, HttpServletResponse response) {
+
     }
 }

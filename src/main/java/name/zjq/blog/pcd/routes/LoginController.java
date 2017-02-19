@@ -35,7 +35,7 @@ public class LoginController {
 	 * 
 	 * @param request
 	 * @return
-	 * @throws CustomizeLogicException
+	 * @throws CustomLogicException
 	 */
 	@RequestMapping(method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody

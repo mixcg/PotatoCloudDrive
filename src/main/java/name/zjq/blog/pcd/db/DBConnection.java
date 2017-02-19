@@ -36,7 +36,7 @@ public class DBConnection {
 				logger.error("数据库初始化失败", e);
 				System.exit(1);
 			}
-			executeUpdate(FileShare.getTableSQL());
+			executeUpdate(FileShare.CREATE_TABLE_SQL);
 		}
 	}
 

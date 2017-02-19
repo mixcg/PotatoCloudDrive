@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN" ng-app="sharePageApp">
+<head>
+    <meta charset="UTF-8">
+    <title>分享</title>
+    <link href="css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+<div class="container" ng-controller="container">
+    <div class="row" ng-show="cancel">
+        <div class="col-md-12" style="text-align:center">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>啊哦，你来晚了，分享的文件已经被取消了或删除了，下次要早点哟！</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6" style="text-align:center">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form class="form-inline" role="form" ng-submit="extractAuth()">
+                        <div class="form-group">
+                            <label>提取密码：</label>
+                            <input type="password" class="form-control" placeholder="请输入提取密码" ng-model="password"
+                                   required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">提取</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/toastr.js"></script>
+    <script src="js/prettify.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="control/share.js"></script>
+</body>
+</html>

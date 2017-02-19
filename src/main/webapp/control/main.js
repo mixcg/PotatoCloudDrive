@@ -237,7 +237,7 @@ app.controller("filelist", ["$scope", "$http", "FileUploader", function ($scope,
 	}
 	// 文件播放
 	$scope.playFile = function () {
-		window.location.href = 'play.html?url=' + $scope.selectedFile.base64FilePath;
+		window.open('play.html?url=' + $scope.selectedFile.base64FilePath+"&playtype="+$scope.selectedFile.fileType);
 	}
 	// 文件下载
 	$scope.dlFile = function () {

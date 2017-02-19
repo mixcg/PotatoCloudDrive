@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
         response.setContentType("text/plain;charset=UTF-8");
         response.setStatus(ex.getHttpStatus());
         try {
-            response.getWriter().write(ex.getMessage());
+            response.getOutputStream().print(new String(ex.getMessage().getBytes("UTF-8"),"iso-8859-1"));
         } catch (IOException e) {
             logger.error(e);
         }
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
         response.setContentType("text/plain;charset=UTF-8");
         response.setStatus(500);
         try {
-            response.getWriter().write("啊哦，出错了！");
+            response.getOutputStream().print(new String("啊哦，出错了！".getBytes("UTF-8"),"iso-8859-1"));
         } catch (IOException e) {
             logger.error(e);
         }
