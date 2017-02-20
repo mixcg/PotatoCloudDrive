@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN" ng-app="sharePageApp">
+<html lang="zh-CN" ng-app="sharePageApp" >
 <head>
     <meta charset="UTF-8">
     <title>分享</title>
     <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/toastr.css" rel="stylesheet">
 </head>
 <body>
 <div class="container" ng-controller="container">
@@ -16,7 +17,7 @@
             </div>
         </div>
     </div>
-    <div class="row">
+    <div class="row" ng-hide="cancel || showFile">
         <div class="col-md-3"></div>
         <div class="col-md-6" style="text-align:center">
             <div class="panel panel-default">
@@ -34,11 +35,69 @@
         </div>
         <div class="col-md-3"></div>
     </div>
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/toastr.js"></script>
-    <script src="js/prettify.js"></script>
-    <script src="js/angular.min.js"></script>
-    <script src="control/share.js"></script>
+    <div class="row" ng-show="showFile">
+        <div class="col-md-2">
+        </div>
+        <div class="col-md-8" style="text-align:center">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th colspan="6">
+                                <ol class="breadcrumb" ng-init="dirul" ng-hide="!dirul">
+                                    <li ng-repeat="li in dirul"><a href='javascript:void(0)' path='' ng-click="backup(this)"
+                                                                   ng-bind="li.name"></a>
+                                    </li>
+                                </ol>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th style="text-align: center;">文件名</th>
+                            <th style="text-align: center;">文件类型</th>
+                            <th style="text-align: center;">大小</th>
+                            <th style="text-align: center;">最后修改时间</th>
+                        </tr>
+                        </thead>
+                        <tbody ng-init="filelist">
+                            <tr ng-repeat="file in filelist" ng-click="select(file)" ng-class="{true:'info', false: ''}[file==selectedFile]">
+                                <td><img src='img/{{file.fileType}}.png' class='img-responsive' fallback-src="img/file.png"></td>
+                                <td>
+                                    <div ng-show="{{file.dir}}">
+                                        <a href='javascipt:void(0)' ng-click="enterDir(file)" ng-bind="file.fileName"></a>
+                                    </div>
+                                    <div ng-show="{{file.canPreview}}">
+                                        <a href='api/files/{{file.base64FilePath}}/play' target="_blank" ng-bind="file.fileName"
+                                           class="bind_hover_card"></a>
+                                    </div>
+                                    <div ng-show="!{{file.dir}} && !{{file.canPreview}}" ng-bind="file.fileName"></div>
+                                </td>
+                                <td ng-bind="file.fileType"></td>
+                                <td ng-bind="file.describeFileSize"></td>
+                                <td ng-bind="file.lastModifiedTime"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="btn-group-vertical pull-left" role="group" ng-show="buttonShow" >
+                <button type="button" class="btn btn-default" ng-click="download()">下载</button>
+                <button type="button" class="btn btn-default" ng-click="preview()" ng-show="selectedFile.canPreview">预览</button>
+                <button type="button" class="btn btn-default" ng-click="cancelSelect()">
+                    <span title='删除' class='glyphicon glyphicon-remove'></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/toastr.js"></script>
+<script src="js/prettify.js"></script>
+<script src="js/angular.min.js"></script>
+<script src="control/share.js"></script>
 </html>

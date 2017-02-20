@@ -1,7 +1,8 @@
-package name.zjq.blog.pcd.routes;
+package name.zjq.blog.pcd.control;
 
 import javax.servlet.http.HttpServletRequest;
 
+import name.zjq.blog.pcd.interceptor.LoginUserAuthInterceptor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import name.zjq.blog.pcd.RSAEncrypt;
 import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
-import name.zjq.blog.pcd.interceptor.LoginUserAuth;
 import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
 
@@ -62,7 +62,7 @@ public class LoginController {
 	 */
 	@RequestMapping(value = "/logout", method = RequestMethod.DELETE, produces = "application/json")
 	@ResponseBody
-	public PR logout(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) {
+	public PR logout(@RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser) {
 		loginUser.setToken(null);
 		loginUser.setExpirationtime(-1);
 		return new PR("ok", null);

@@ -40,6 +40,11 @@ public class DBConnection {
 		}
 	}
 
+	/**
+	 * 执行更新
+	 * @param sqls
+	 * @return
+     */
 	public static int executeUpdate(String... sqls) {
 		int i = 0;
 		Statement stat = null;
@@ -62,6 +67,13 @@ public class DBConnection {
 		return i;
 	}
 
+	/**
+	 * 执行查询
+	 * @param sql
+	 * @param classz
+	 * @param <T>
+     * @return
+     */
 	public static <T> List<T> executeQuery(String sql, Class<T> classz) {
 		Statement stat = null;
 		try {

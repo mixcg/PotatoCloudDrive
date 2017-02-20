@@ -265,7 +265,7 @@ public class CloudFileService {
                 return big1.divide(new BigDecimal(sizes[i]), 2, BigDecimal.ROUND_HALF_EVEN).toString() + units[i];
             }
         }
-        return "";
+        return "0KB";
     }
 
     /**

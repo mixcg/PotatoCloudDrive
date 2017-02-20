@@ -1,16 +1,12 @@
-package name.zjq.blog.pcd.routes;
+package name.zjq.blog.pcd.control;
 
 import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.exceptionhandler.CustomLogicException;
-import name.zjq.blog.pcd.interceptor.LoginUserAuth;
+import name.zjq.blog.pcd.interceptor.LoginUserAuthInterceptor;
 import name.zjq.blog.pcd.services.CloudFileService;
 import name.zjq.blog.pcd.utils.CoderUtil;
 import name.zjq.blog.pcd.utils.PR;
 import name.zjq.blog.pcd.utils.StrUtil;
-import org.apache.commons.io.FileUtils;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +31,7 @@ public class FileController {
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public PR getFileLst(@RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser,
+    public PR getFileLst(@RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser,
                          @RequestParam(value = "accepttype", required = false) String filtertype,
                          @RequestParam(value = "filterfile", required = false) String filterfile) throws Exception {
         return getFileList(null, loginUser, filtertype, filterfile);
@@ -54,7 +50,7 @@ public class FileController {
     @RequestMapping(value = "/{base64filepath}", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
     public PR getFileList(@PathVariable("base64filepath") String path,
-                          @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser,
+                          @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser,
                           @RequestParam(value = "accepttype", required = false) String accepttype,
                           @RequestParam(value = "filterfile", required = false) String filterfile) throws Exception {
         if (StrUtil.isNullOrEmpty(path)) {
@@ -80,7 +76,7 @@ public class FileController {
     @RequestMapping(value = "/{base64filepath}", method = RequestMethod.DELETE, produces = "application/json")
     @ResponseBody
     public PR delFile(@PathVariable("base64filepath") String path,
-                      @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+                      @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser) throws Exception {
         if (StrUtil.isNullOrEmpty(path)) {
             throw new CustomLogicException(400, "参数为空", null);
         } else {
@@ -90,10 +86,10 @@ public class FileController {
             if (CloudFileService.delFile(path)) {
                 return new PR("文件删除成功", null);
             } else {
-                throw new CustomLogicException(500, "文件删除失败", null);
+                throw new CustomLogicException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "文件删除失败", null);
             }
         } catch (FileNotFoundException e) {
-            throw new CustomLogicException(404, "文件不存在", e);
+            throw new CustomLogicException(HttpServletResponse.SC_NOT_FOUND, "文件不存在", e);
         }
     }
 
@@ -110,7 +106,7 @@ public class FileController {
     @ResponseBody
     public PR rnameFile(@PathVariable("base64filepath") String path,
                         @PathVariable("base64newfilename") String newfilename,
-                        @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+                        @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser) throws Exception {
         if (StrUtil.isNullOrEmpty(path)) {
             throw new CustomLogicException(400, "参数为空", null);
         } else {
@@ -120,12 +116,12 @@ public class FileController {
             if (CloudFileService.renameFile(path, newfilename)) {
                 return new PR("文件重命名成功", null);
             } else {
-                throw new CustomLogicException(500, "文件重命名失败", null);
+                throw new CustomLogicException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "文件重命名失败", null);
             }
         } catch (FileNotFoundException e1) {
-            throw new CustomLogicException(500, e1.getMessage(), null);
+            throw new CustomLogicException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage(), null);
         } catch (FileAlreadyExistsException e2) {
-            throw new CustomLogicException(500, e2.getMessage(), null);
+            throw new CustomLogicException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e2.getMessage(), null);
         }
     }
 
@@ -140,7 +136,7 @@ public class FileController {
     @RequestMapping(value = "/{filetype}/{base64filename}", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
     public PR createNewFile(@PathVariable("base64filename") String filename, @PathVariable("filetype") String filetype,
-                            @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+                            @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser) throws Exception {
         return createNewFile(null, filetype, filename, loginUser);
     }
 
@@ -156,7 +152,7 @@ public class FileController {
     @RequestMapping(value = "/{base64filepath}/{filetype}/{base64filename}", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
     public PR createNewFile(@PathVariable("base64filepath") String path, @PathVariable("filetype") String filetype,
-                            @PathVariable("base64filename") String filename, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser)
+                            @PathVariable("base64filename") String filename, @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser)
             throws Exception {
         if (StrUtil.isNullOrEmpty(path)) {
             path = loginUser.getDirectory();
@@ -174,13 +170,13 @@ public class FileController {
                 throw new CustomLogicException(400, "不支持的操作", null);
             }
         } catch (FileAlreadyExistsException e1) {
-            throw new CustomLogicException(500, e1.getMessage(), null);
+            throw new CustomLogicException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage(), null);
         }
 
         if (finishFlag) {
             return new PR("新建文件成功", null);
         } else {
-            throw new CustomLogicException(500, "新建文件（文件夹）失败", null);
+            throw new CustomLogicException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "新建文件（文件夹）失败", null);
         }
     }
 
@@ -195,7 +191,7 @@ public class FileController {
     @RequestMapping(value = "/{base64filepath}/", method = RequestMethod.PUT, produces = "application/json")
     @ResponseBody
     public PR moveFile(@PathVariable("base64filepath") String filepath,
-                       @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+                       @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser) throws Exception {
         return moveFile(filepath, null, loginUser);
     }
 
@@ -211,7 +207,7 @@ public class FileController {
     @RequestMapping(value = "/{base64filepath}/{newdirpath}", method = RequestMethod.PUT, produces = "application/json")
     @ResponseBody
     public PR moveFile(@PathVariable("base64filepath") String filepath, @PathVariable("newdirpath") String newdirpath,
-                       @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser) throws Exception {
+                       @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser) throws Exception {
         filepath = loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(filepath), "utf-8");
         if (StrUtil.isNullOrEmpty(newdirpath)) {
             newdirpath = loginUser.getDirectory();
@@ -233,7 +229,7 @@ public class FileController {
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public PR fileUpload(HttpServletRequest request, @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser)
+    public PR fileUpload(HttpServletRequest request, @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser)
             throws Exception {
         Path uploadDir = Paths.get(loginUser.getDirectory(), "uploads");
         boolean uploadDirExists = Files.exists(uploadDir, new LinkOption[]{LinkOption.NOFOLLOW_LINKS});
@@ -283,7 +279,7 @@ public class FileController {
      */
     @RequestMapping(value = "/{base64filepath}/download")
     public void fileDownload(@PathVariable("base64filepath") String path,
-                             @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser, HttpServletRequest request,
+                             @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser, HttpServletRequest request,
                              HttpServletResponse response) throws Exception {
         Path file = Paths.get(loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8"));
         CloudFileService.filePlayOrDownload(false, file, request, response);
@@ -299,7 +295,7 @@ public class FileController {
      */
     @RequestMapping(value = "/{base64filepath}/play", method = RequestMethod.GET, produces = "application/json")
     public void filePlay(@PathVariable("base64filepath") String path,
-                         @RequestAttribute(LoginUserAuth.LOGIN_USER) User loginUser, HttpServletRequest request,
+                         @RequestAttribute(LoginUserAuthInterceptor.LOGIN_USER) User loginUser, HttpServletRequest request,
                          HttpServletResponse response) throws Exception {
         Path file = Paths.get(loginUser.getDirectory() + "/" + new String(CoderUtil.decoderURLBASE64(path), "utf-8"));
         CloudFileService.filePlayOrDownload(true, file, request, response);

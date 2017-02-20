@@ -19,7 +19,12 @@
             <mvc:mapping path="/login/logout"/>
             <mvc:mapping path="/share/**"/>
             <mvc:mapping path="/download/**"/>
-            <bean class="name.zjq.blog.pcd.interceptor.LoginUserAuth"/>
+            <mvc:exclude-mapping path="/share/access"/>
+            <bean class="name.zjq.blog.pcd.interceptor.LoginUserAuthInterceptor"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/share/access"/>
+            <bean class="name.zjq.blog.pcd.interceptor.ShareAccessAuthInterceptor"/>
         </mvc:interceptor>
     </mvc:interceptors>
 

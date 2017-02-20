@@ -39,7 +39,6 @@ public class FileShare {
         this.filePath = filepath;
         this.owner = loginUser.getUsername();
         this.password = ShareFileService.generatePassword();
-        filepath = new String(CoderUtil.decoderURLBASE64(filepath), "UTF-8");
         Path file = Paths.get(loginUser.getDirectory(), filepath);
         if (!Files.exists(file, new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
             throw new CustomLogicException(400, "要分享的文件不存在", null);

@@ -30,6 +30,7 @@ public class CloudFile {
      * @throws IOException
      */
     public CloudFile(String mainDir, Path fileArg, BasicFileAttributes attrs) throws IOException {
+        mainDir = mainDir.replace("\\", "/");
         String relativeFilePath = fileArg.toAbsolutePath().toString().replace("\\", "/").replaceFirst(mainDir, "");
         base64FilePath = CoderUtil.encoderURLBASE64((relativeFilePath).getBytes());
         fileName = fileArg.getFileName().toString();

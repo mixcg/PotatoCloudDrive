@@ -10,7 +10,7 @@ import org.springframework.web.servlet.ModelAndView;
 import name.zjq.blog.pcd.bean.User;
 import name.zjq.blog.pcd.utils.StrUtil;
 
-public class LoginUserAuth implements HandlerInterceptor {
+public class LoginUserAuthInterceptor implements HandlerInterceptor {
     public static final String TOKEN_NAME = "pcdtoken";
     public static final String LOGIN_USER = "loginUser";
 

@@ -5,7 +5,7 @@ var errorEvent = function (response) {
 	}
 }
 
-var app = angular.module('mainPageApp', ['angularFileUpload']);
+var app = angular.module('mainPageApp', ['angularFileUpload', 'ngclipboard']);
 var postCfg = {
 	headers: {
 		'Content-Type': 'application/x-www-form-urlencoded'
@@ -60,7 +60,7 @@ app.controller("container", function ($scope, $http) {
 	}
 });
 // 文件列表
-app.controller("filelist", ["$scope", "$http", "FileUploader", function ($scope, $http, FileUploader) {
+app.controller("filelist", ["$scope", "$http", "$location", "FileUploader", function ($scope, $http, $location, FileUploader) {
 	var uploader = $scope.uploader = new FileUploader({
 		url: 'api/files',
 		autoUpload: true,
@@ -146,7 +146,11 @@ app.controller("filelist", ["$scope", "$http", "FileUploader", function ($scope,
 	}
 	// 文件列表选中
 	$scope.select = function (tr) {
-		$scope.selectedFile = tr;
+		if ($scope.selectedFile == tr) {
+			$scope.selectedFile = null;
+		} else {
+			$scope.selectedFile = tr;
+		}
 	}
 	// 文件列表取消选择
 	$scope.cancelSelect = function () {
@@ -222,10 +226,10 @@ app.controller("filelist", ["$scope", "$http", "FileUploader", function ($scope,
 	}
 	// 文件分享Modal
 	$scope.shareFileModal = function () {
-		// TODO 完善链接
 		$http.post("api/share/" + $scope.selectedFile.base64FilePath, $scope.$parent.token, postCfg).then(function (response) {
 			if (response) {
-				response.data.result.link = response.data.result.id;
+				var url = $location.absUrl();
+				response.data.result.link = url.substring(0, url.indexOf("main.html")) + "share.html?link=" + response.data.result.id;
 				$scope.shareFile = response.data.result;
 				var modal = {};
 				modal.title = "分享成功！";
@@ -237,7 +241,7 @@ app.controller("filelist", ["$scope", "$http", "FileUploader", function ($scope,
 	}
 	// 文件播放
 	$scope.playFile = function () {
-		window.open('play.html?url=' + $scope.selectedFile.base64FilePath+"&playtype="+$scope.selectedFile.fileType);
+		window.open('play.html?url=' + $scope.selectedFile.base64FilePath + "&playtype=" + $scope.selectedFile.fileType);
 	}
 	// 文件下载
 	$scope.dlFile = function () {
@@ -301,6 +305,9 @@ app.controller("filelist", ["$scope", "$http", "FileUploader", function ($scope,
 				$http.put("api/files/" + filepath + "/" + nowdir, $scope.$parent.token, postCfg).then(success,
 					errorEvent);
 				break;
+			case "share":
+				toastr.info("复制到剪切板成功！");
+				break;
 		}
 	}
 }]);
@@ -362,11 +369,17 @@ app.controller("transportlist", function ($scope, $http, $interval) {
 	}
 });
 // 分享列表
-app.controller("sharelist", function ($scope, $http) {
+app.controller("sharelist", function ($scope, $http, $location) {
 	function loadShareList() {
 		$http.get("api/share", $scope.$parent.token).then(function success(response) {
 			if (response) {
-				$scope.sharelist = response.data.result;
+				var url = $location.absUrl();
+				url = url.substring(0, url.indexOf("main.html")) + "share.html?link=";
+				var result = response.data.result;
+				for (var i = 0; i < result.length; i++) {
+					result[i].link = url + result[i].id;
+				}
+				$scope.sharelist = result;
 			}
 		}, errorEvent);
 	}
@@ -388,13 +401,7 @@ app.controller("sharelist", function ($scope, $http) {
 	}
 
 	// 复制分享连接
-	$scope.copyShareLink = function (file) {
-		// TODO 完善链接
-		new Clipboard('.copy', {
-			text: function (trigger) {
-				toastr.info("复制到剪切板成功！");
-				return "aaaaa";
-			}
-		});
+	$scope.copyShareLink = function () {
+		toastr.info("复制到剪切板成功！");
 	}
 });

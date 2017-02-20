@@ -62,6 +62,19 @@ public class User {
     }
 
     /**
+     * 获取用户目录
+     * @param username
+     * @return
+     */
+    public static String getUserDirectory(String username) {
+        if (userlist.containsKey(username)) {
+            User u = userlist.get(username);
+            return u.getDirectory();
+        }
+        return null;
+    }
+
+    /**
      * 校验token
      *
      * @param _token
