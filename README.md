@@ -1,9 +1,7 @@
 # PotatoCloudDrive
 “土豆云”，一个简单的java网盘程序
 # 简介
-业余时间开发的一个java网盘程序，后端采用Spring MVC框架编写，接口尽量使用仿RESTful风格设计，实现了前后端分离；
-由于本程序开发目标是作为一个私有网盘搭建，实现个人或小组的文件管理，访问量和并发量实际不大，为了使用方便因而使用了sqlite数据库；
-前端采用Bootstrap+Angular以及一些其他组件编写。
+业余时间开发的一个java网盘程序，后端采用Spring MVC框架编写，接口尽量使用仿RESTful风格设计，实现了前后端分离；由于本程序开发目标是作为一个私有网盘搭建，实现个人或小组的文件管理，访问量和并发量实际不大，为了使用方便因而使用了sqlite数据库；前端采用Bootstrap+Angular以及一些其他组件编写。
 # 功能
 - 文件的上传和下载
 - 新建文件、文件夹
@@ -16,8 +14,7 @@
 OpenJDK 1.8 或 Oracle JDK 1.8及以上  
 Apache Tomcat 7及以上  
 # 配置
-修改/src/main/config.properties文件
-（如果是war文件，请先解压文件之后，再修改项目目录下的WEB-INF/classes/config.properties文件）
+修改/src/main/config.properties文件（如果是war文件，请先解压文件之后，再修改项目目录下的WEB-INF/classes/config.properties文件）
 ```
 #数据库地址，文件需要以.db结尾，若文件不存在则自动新建
 database=/usr/local/pcd.db
