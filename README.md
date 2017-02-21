@@ -10,10 +10,11 @@
 - 移动、重命名、删除、分享文件或文件夹
 - MP4及FLV格式的文件在线播放
 - 图片格式文件预览
-- 支持http/https协议的文件链接离线下载
+- 支持http/https协议的文件链接离线下载  
+
 # 开发及运行环境
 OpenJDK 1.8 或 Oracle JDK 1.8及以上  
-Apache Tomcat 7及以上
+Apache Tomcat 7及以上  
 # 配置
 修改/src/main/config.properties文件
 （如果是war文件，请先解压文件之后，再修改项目目录下的WEB-INF/classes/config.properties文件）
