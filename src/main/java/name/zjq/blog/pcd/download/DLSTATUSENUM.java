@@ -27,7 +27,7 @@ public enum DLSTATUSENUM {
 	STOP(3);
 	private int dlcode;
 
-	private DLSTATUSENUM(int code) {
+	DLSTATUSENUM(int code) {
 		this.dlcode = code;
 	}
 

@@ -81,9 +81,9 @@ public class DownloadTasks {
 		try {
 			lock.lock();
 			String taskID = StrUtil.getUUID();
-			String userdir = USER_DOWNLOAD_DIR.get(username).toAbsolutePath().toString();
+			String userDir = USER_DOWNLOAD_DIR.get(username).toAbsolutePath().toString();
 			if (url.startsWith("http") || url.startsWith("https")) {
-				HttpDownload httpDownload = new HttpDownload(userdir, url,taskID);
+				HttpDownload httpDownload = new HttpDownload(userDir, url,taskID);
 				new Thread(httpDownload).start();
 				getTaskMapByUsername(username).put(taskID, httpDownload);
 			} else if (url.startsWith("ftp")) {
@@ -100,7 +100,7 @@ public class DownloadTasks {
 	/**
 	 * 获取下载状态
 	 * 
-	 * @param taskID
+	 * @param username
 	 * @return
 	 */
 	public static List<Map<String, String>> getDownloadStatus(String username) {
@@ -173,9 +173,9 @@ public class DownloadTasks {
 
 	class InitDownloadTask extends Thread {
 		public void run() {
-			Iterator<String> userlist = USER_DOWNLOAD_DIR.keySet().iterator();
-			while (userlist.hasNext()) {
-				String username = userlist.next();
+			Iterator<String> userList = USER_DOWNLOAD_DIR.keySet().iterator();
+			while (userList.hasNext()) {
+				String username = userList.next();
 				Path path = USER_DOWNLOAD_DIR.get(username);
 				try {
 					Files.walkFileTree(path, new HashSet<FileVisitOption>(), 1, new SimpleFileVisitor<Path>() {

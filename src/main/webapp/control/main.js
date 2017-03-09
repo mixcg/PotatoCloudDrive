@@ -28,6 +28,7 @@ app.directive('fallbackSrc', function () {
 
 // 主面板
 app.controller("container", function ($scope, $http) {
+    $scope.username = CookieUtil.getCookie("username");
 	$("[data-toggle='popover']").popover();
 	$scope.uploadlist = new Array();
 	$scope.downloadlist = new Array();

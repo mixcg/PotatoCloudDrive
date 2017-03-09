@@ -13,15 +13,15 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class CloudFile {
 
-    private boolean isDir = false;// 是否是目录
+    private boolean isDir;// 是否是目录
     private String fileType = "";// 文件类型
     private String fileName;// 文件名称
     private String base64FilePath;// base64编码文件地址
     private long fileSize;// 文件大小(单位:bytes)
     private String describeFileSize = "";// 文件描述大小
     private String lastModifiedTime;// 文件最后修改时间
-    private boolean isPlayOnline = false;// 是否支持在线播放
-    private boolean isCanPreview = false;//是否支持预览
+    private boolean isPlayOnline;// 是否支持在线播放
+    private boolean isCanPreview;//是否支持预览
 
     /**
      * @param mainDir 用户主目录

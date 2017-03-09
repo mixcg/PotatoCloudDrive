@@ -20,6 +20,7 @@ app.controller("login", function($scope, $http) {
 					if (response) {
 						CookieUtil.delCookie("pcdtoken");
 						CookieUtil.setCookie("pcdtoken", response.data.result);
+						CookieUtil.setCookie("username", $scope.username);
 						window.location.href = "main.html";
 					}
 				}, function error(response) {
